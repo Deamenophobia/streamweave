@@ -5,7 +5,7 @@ Streamweave v0.2 is a general numerical workbench. Its canvas describes the calc
 ## Boundaries
 
 1. **Data contracts:** a table contains typed scalar columns; a series contains timestamped values, units, quality states, and optional availability times; an aligned frame contains several numeric columns on one time axis. Dataset IDs are distinct from module IDs, so several source modules can select different columns of the same dataset.
-2. **Module registry:** each definition declares input/output ports, compatible data kinds, input cardinality, defaults, and descriptive metadata. The inspector and module search use that registry. Mathematical kernels remain independent of the UI.
+2. **Module registry:** each definition declares input/output ports, compatible data kinds, input cardinality, parameter fields, descriptive metadata, and its evaluator. Defaults come from the fields. The inspector and module search consume the same registry; mathematical kernels remain independent of the UI.
 3. **Graph executor:** validates IDs, ports, cycles, sizes, and parameters, then evaluates a topological order. It uses actual incoming edges and computes a shared parent once. Errors block only descendants; disconnected valid branches still execute. Positions do not affect numerical results.
 4. **Workbench:** React Flow provides editing, named handles, duplication, dragging, and deletion. A worker performs calculation. Changing data or parameters terminates the previous worker; moving nodes does not recompute. Outputs expose values through paginated tables, individual-scale charts, and downloads.
 5. **Persistence:** version 2 project JSON embeds graph and datasets. Browser Save uses a separate v2 storage key and leaves v1 storage alone. Results JSON embeds the current project and engine version; CSV is a flat inspection/export format, not the complete project format.
@@ -29,6 +29,37 @@ flowchart LR
 
 The built-in study implements the first four outputs. The last branch illustrates additional composition available through module search. To compare multiple window lengths, duplicate a correlation module, connect it to the same aligned frame, configure its window, and connect both outputs to a chart.
 
+## Core ownership
+
+| Module                    | Owns                                                                          |
+| ------------------------- | ----------------------------------------------------------------------------- |
+| `contracts.ts`            | Graph, node, port, project, and execution-result types                        |
+| `modules/*.ts`            | One calculation/output definition per file: metadata, fields, help, evaluator |
+| `parameters.ts`           | Parameter contracts, shared field groups, dependent bounds, validation        |
+| `moduleDefinition.ts`     | Definition construction, typed input access, common module contract checks    |
+| `registry.ts`             | Explicit build-time registration of built-in definitions                      |
+| `validation.ts`           | Graph shape, IDs, connection compatibility, cardinality, cycle/size bounds    |
+| `executor.ts`             | Scheduling, dependency blocking, independent branch execution                 |
+| `project.ts` / `nodes.ts` | Portable project parsing and node construction                                |
+| `data.ts` / `math.ts`     | Data contracts/imports and independently callable numerical kernels           |
+| `graph.ts`                | Public compatibility facade; no calculation dispatch                          |
+
+The module contract makes extension explicit: add a definition and register it, rather than add branches inside the engine or inspector. The shared runner validates parameter ranges, incoming port contracts, outgoing port kinds, and finite result values. The application only serializes projects and data; evaluators and field-visibility functions stay in code.
+
+```mermaid
+flowchart TB
+  D[Module definitions] --> R[Registry]
+  P[Parameter contracts] --> D
+  K[Numerical kernels] --> D
+  R --> E[Generic graph executor]
+  R --> I[Generic inspector controls]
+  R --> L[Module library]
+  C[Graph contracts] --> V[Graph validation]
+  V --> E
+```
+
+There is no runtime discovery/container framework: registration is a small composition file. Source checks reject dependency cycles, core imports outside its package or external dependencies, and direct UI imports of core internals. These checks help enforce intended boundaries; they are not a proof of every aspect of architectural quality.
+
 ## Editor ownership
 
 The application composes explicit interfaces; project state does not contain browser controls or canvas measurements.
@@ -46,7 +77,9 @@ The application composes explicit interfaces; project state does not contain bro
 | `useGraphEditing.ts`                                                   | React Flow changes, transient measurements/edge selection, parameter edits  |
 | `useCanvasInsertion.ts`                                                | Pointer coordinates, search, placement, wire continuation, keyboard actions |
 | `CanvasWorkspace.tsx` / `NodeInspectorPanel.tsx`                       | Canvas composition, editor controls, selected module configuration          |
-| `ModuleNode.tsx` / `NodePicker.tsx` / `Inspector.tsx`                  | Node display, searchable module choice, parameter forms                     |
+| `ModuleNode.tsx` / `NodePicker.tsx` / `Inspector.tsx`                  | Node display, searchable module choice, inspector composition               |
+| `ParameterFields.tsx` / `parameterOptions.ts`                          | Shared parameter widgets and declared dataset/input column resolution       |
+| `modulePresentation.ts`                                                | UI icons and concise module details; separate from edit operations          |
 | `DatasetsView.tsx`                                                     | Selected source preview/schema, import, source-placement request, CSV       |
 | `ResultsView.tsx` / `DataView.tsx`                                     | One selected module/port, charts, tables, download controls                 |
 
@@ -74,6 +107,6 @@ Some legacy routines and domain-specific services were simplified or tightly cou
 
 ## Extension boundary
 
-A future module needs port contracts, parameter validation, a deterministic kernel, inspector controls, and numerical tests. A future data connector owns retrieval, units, timestamps, release/revision semantics, and normalization; the core should still receive explicit data. There is no arbitrary code evaluation or network request inside a graph.
+A future module needs port contracts, a parameter schema, a deterministic evaluator/kernel, registration, and numerical tests. Existing field kinds render automatically; only a new kind of interaction requires a shared widget implementation. This is a build-time extension contract, not a remote plugin loader. A future data connector owns retrieval, units, timestamps, release/revision semantics, and normalization; the core should still receive explicit data. There is no arbitrary code evaluation or network request inside a graph.
 
 The workbench is bounded batch calculation, not a live streaming scheduler. The old incremental pressure API remains independently usable. Rolling kernels currently scan each bounded trailing window, O(rows × window); they make no low-latency claim. Worker cancellation prevents stale results from replacing newer edits.

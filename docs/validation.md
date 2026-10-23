@@ -4,7 +4,7 @@ Validation covers the local implementation and reproducibility. It makes no clai
 
 ## Automated checks — v0.2
 
-`npm run check` passes formatting, documentation-link validation, TypeScript checks, all **45 tests**, and both production builds. `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` still executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the quality review on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
+`npm run check` passes formatting, documentation-link validation, source boundary/cycle checks, TypeScript checks, all **50 tests**, and both production builds. `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` still executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the quality review on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
 
 The 15 workbench tests cover:
 
@@ -22,6 +22,16 @@ The retained 20 legacy tests cover pressure scale invariance, left-boundary expi
 Seven editor tests cover immutable connected insertion, compatible module search, atomic deletion, grouped drag history, bounded undo/redo, importing data without creating nodes, and stopping oversized import batches before excess file reads.
 
 Three project-opening tests use controlled asynchronous completions to verify that late reads cannot replace a newer workspace, newer open requests win, and stale failures do not surface in another document. See [the code-quality review](code-quality.md) for scope and remaining gaps.
+
+Three module-contract tests cover an independently defined evaluator, invalid input/output rejection, non-finite outputs, schema defaults, and dependent numeric bounds. Two parameter-option tests verify resolution of the declared dataset/input port and graceful behavior when inputs are absent.
+
+## Module-boundary refactor acceptance — 2026-10-24
+
+- The two bundled projects and their full calculation results were captured before/after the refactor and compared structurally; both remained identical.
+- Correlation's inspector exposed the schema's minimum window of three. Changing its window from 20 to eight changed the minimum-sample maximum to eight and recomputed 109/121 valid values. Undo restored 20 with all eight wires present.
+- Alignment showed 60-second grid and 150-second maximum-age controls in previous mode. Exact intersection hid them; Undo restored both values and controls.
+- Source selectors resolved the correct dataset, numeric reading column, label, and unit after reload. The workbench completed all default branches successfully.
+- Source dependency checks passed across the refactored core and UI. Existing public exports and v2 project shapes remain available.
 
 ## Workspace navigation acceptance — 2026-10-24
 

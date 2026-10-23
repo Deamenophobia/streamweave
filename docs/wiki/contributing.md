@@ -13,7 +13,7 @@ npm run demo:pressure
 npm audit
 ```
 
-`check` verifies formatting, documentation links, strict TypeScript, behavioral/numerical tests, and both production builds. TypeScript rejects unused locals/parameters and missing returns. The dependency audit is a point-in-time package advisory check, not a security assessment.
+`check` verifies formatting, documentation links, source import boundaries/dependency cycles, strict TypeScript, behavioral/numerical tests, and both production builds. TypeScript rejects unused locals/parameters and missing returns. The dependency audit is a point-in-time package advisory check, not a security assessment.
 
 After interaction changes, inspect the browser: import assets without creating modules; place and connect modules; change parameters; undo/redo; navigate the three views; save and restore. Record actual acceptance results in [Validation](../validation.md). Automated browser coverage is still a known gap.
 
@@ -21,12 +21,14 @@ After interaction changes, inspect the browser: import assets without creating m
 
 1. Define the typed value contract and valid parameter ranges. Decide how nulls, units, availability times, and overflow behave.
 2. Add deterministic mathematical operations in the core, independent of the UI.
-3. Extend `WorkbenchKind`, `WORKBENCH_MODULES`, and evaluation in [workbench/graph.ts](../../packages/core/src/workbench/graph.ts).
-4. Add inspector controls and its icon/detail in the workbench. Use explicit units in labels; project time parameters are milliseconds.
+3. Add a definition under `workbench/modules/` using `defineModule`: ports, parameter schema, help, and evaluator belong together. [Smooth](../../packages/core/src/workbench/modules/smooth.ts) is a small example. Defaults are derived from the schema; input/output and parameter contracts are checked by `runModule`.
+4. Add its kind to [contracts.ts](../../packages/core/src/workbench/contracts.ts), register it in [registry.ts](../../packages/core/src/workbench/registry.ts), and choose an icon in [modulePresentation.ts](../../apps/workbench/src/modulePresentation.ts). The generic inspector renders existing field kinds automatically; the scheduler needs no module-specific branch. Use explicit units in labels; stored time parameters are milliseconds and `displayScale` describes their UI conversion.
 5. Test independent analytical fixtures, missing/degenerate cases, graph composition, and portable project behavior. Do not merely restate the implementation in tests.
 6. Update the [module reference](module-reference.md), [numerical contract](../analytics.md), and relevant example or tutorial.
 
 A data adapter should normalize timestamps, units, release/revision information, and bounds before the core receives a dataset. Network retrieval does not belong inside a calculation node.
+
+This is a build-time extension contract. It does not load arbitrary remote plugins or scripts. A genuinely new parameter interaction should extend the shared field contract and renderer, with option-resolution tests; do not reintroduce a conditional chain keyed by module type. Keep low-level numerical kernels independently callable and validated.
 
 ## Edit transactions and asynchronous work
 

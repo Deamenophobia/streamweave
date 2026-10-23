@@ -1,10 +1,10 @@
+import { moduleDetail } from "./modulePresentation";
 import { useCallback, useMemo, useState } from "react";
 import { type Connection, type Edge, type EdgeChange, type NodeChange } from "@xyflow/react";
 import { workbenchConnectionError } from "@streamweave/core";
 import {
   firstNumericColumn,
   deleteElements,
-  moduleDetail,
   removeEdges,
   removeNodes,
   type GraphUpdate,

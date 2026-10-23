@@ -1,3 +1,4 @@
+import { moduleIcons } from "./modulePresentation";
 import { useEffect, useRef } from "react";
 import {
   Background,
@@ -9,7 +10,7 @@ import {
 } from "@xyflow/react";
 import { WORKBENCH_MODULES } from "@streamweave/core";
 import { NodeInspectorPanel } from "./NodeInspectorPanel";
-import { moduleIcons, removeNodes, type ModuleDraft } from "./editorModel";
+import { removeNodes, type ModuleDraft } from "./editorModel";
 import { nodeTypes, type VisualNode } from "./ModuleNode";
 import { NodePicker } from "./NodePicker";
 import { useCanvasInsertion, type CanvasInsertion } from "./useCanvasInsertion";

@@ -20,7 +20,7 @@ npm run dev
 Open **http://127.0.0.1:5187**. The initial study connects two synthetic sensor datasets sampled at different intervals. An alignment module feeds rolling correlation, descriptive linear regression, and an export. Regression has separate coefficient and residual ports.
 
 ```sh
-npm run check          # formatting, docs, types, 45 behavioral/numerical tests, production builds
+npm run check          # formatting, docs, boundaries, types, 50 behavioral/numerical tests, builds
 npm run demo           # execute the multi-source study without the browser
 npm run demo:pressure  # retained signed-event replay example
 ```

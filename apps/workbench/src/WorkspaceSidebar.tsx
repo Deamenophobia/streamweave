@@ -1,6 +1,7 @@
+import { moduleIcons } from "./modulePresentation";
 import { useState } from "react";
 import { WORKBENCH_MODULES, type WorkbenchKind, type WorkbenchProject } from "@streamweave/core";
-import { moduleIcons, sourceDraft, type ModuleDraft } from "./editorModel";
+import { sourceDraft, type ModuleDraft } from "./editorModel";
 import type { WorkspaceRoute } from "./workspaceNavigation";
 import type { Execution } from "./useGraphRun";
 

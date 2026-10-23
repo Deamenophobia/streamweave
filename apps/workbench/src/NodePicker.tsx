@@ -1,6 +1,6 @@
+import { moduleIcons } from "./modulePresentation";
 import { useEffect, useRef, useState } from "react";
 import { WORKBENCH_MODULES, type WorkbenchKind } from "@streamweave/core";
-import { moduleIcons } from "./editorModel";
 type Props = {
   x: number;
   y: number;

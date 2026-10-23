@@ -1,29 +1,8 @@
 import { parseDataset } from "./data.js";
-import {
-  WORKBENCH_MODULES,
-  type WorkbenchNode,
-  type WorkbenchEdge,
-  type WorkbenchProject,
-  type WorkbenchKind,
-} from "./graph.js";
+import { makeNode } from "./nodes.js";
+import type { WorkbenchProject, WorkbenchEdge } from "./contracts.js";
 import { scenario } from "../scenarios.js";
 
-export function makeNode(
-  id: string,
-  type: WorkbenchKind,
-  x: number,
-  y: number,
-  params: WorkbenchNode["params"] = {},
-  title?: string,
-): WorkbenchNode {
-  return {
-    id,
-    type,
-    title: title ?? WORKBENCH_MODULES[type].title,
-    position: { x, y },
-    params: { ...WORKBENCH_MODULES[type].defaults, ...params },
-  };
-}
 const edge = (
   source: string,
   sourcePort: string,

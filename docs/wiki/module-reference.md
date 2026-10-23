@@ -1,6 +1,6 @@
 # Module reference
 
-Modules declare typed input/output ports and configurable parameters. The [registry](../../packages/core/src/workbench/graph.ts) is the implementation authority. `table` is a typed scalar table, `series` is timestamped numeric values with quality/availability, and `frame` is several numeric columns aligned on one time axis.
+Modules declare typed input/output ports and configurable parameters. The [registry](../../packages/core/src/workbench/registry.ts) composes the individual definitions under `workbench/modules/`. Each definition owns its parameter schema and evaluator; the inspector and engine use the same schema. `table` is a typed scalar table, `series` is timestamped numeric values with quality/availability, and `frame` is several numeric columns aligned on one time axis.
 
 Stored project parameters use **milliseconds** for time fields. The inspector labels time controls in **seconds** and converts them. Window and lag parameters count observations, not elapsed time. Configure minimum samples no higher than the window.
 

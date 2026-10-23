@@ -19,11 +19,19 @@ TypeScript additionally enforces unused-local, unused-parameter, and implicit-re
 
 ## Verification
 
-The resulting suite contains **45 tests**: 20 legacy accumulator/replay/pipeline tests, 15 general workbench tests, seven editor/import tests, and three project-opening race tests. `npm run check` runs formatting, documentation-link validation, type checking, tests, and production builds. Both terminal examples are also exercised during this review.
+The resulting suite contains **50 tests**: 20 legacy accumulator/replay/pipeline tests, 15 general workbench tests, seven editor/import tests, three project-opening race tests, three module-contract tests, and two parameter-option tests. `npm run check` runs formatting, documentation-link validation, source boundary/cycle checks, type checking, tests, and production builds. Both terminal examples are also exercised during this review.
 
 `npm audit` reported **zero known vulnerabilities** for the installed lockfile on 2026-10-24. This is time-sensitive and does not cover application logic or unknown vulnerabilities. React Flow still produces its known non-fatal `use client` bundler warning in this client application.
 
 See the [validation record](validation.md) for browser acceptance evidence and the project's [CI pipelines](https://gitlab.com/Deamenophobia/streamweave/-/pipelines) for checks tied to each pushed commit.
+
+## Modularity and maintainability follow-up
+
+The former core graph file combined metadata, module dispatch, validation, scheduling, and project parsing. Those responsibilities now have separate modules. Each built-in definition owns its ports, parameter schema, defaults, help, and evaluator. `registry.ts` is their composition point; `executor.ts` schedules modules through the shared contract without a module-type conditional chain. `graph.ts` remains a compatibility facade.
+
+The inspector's module-specific conditions were replaced by shared parameter controls. Choice options, numeric limits, dependent maximums, time-unit conversions, and field visibility come from the definitions. Column controls resolve their declared dataset/input port. UI icon/detail presentation is separate from graph-edit operations.
+
+The two bundled projects and all their calculation results were compared before/after and remained structurally identical. Added tests cover an independently defined module, port/finite-output guards, schema defaults and dependent bounds, and data-dependent column choices. Import-boundary and cycle checks run in CI. The extension guide shows how to add a module without modifying the scheduler or generic inspector.
 
 ## Remaining gaps
 
@@ -31,7 +39,7 @@ See the [validation record](validation.md) for browser acceptance evidence and t
 - Keyboard/focus behavior has been spot-checked, but there is no complete accessibility audit.
 - Input bounds are enforced; practical throughput and peak memory have not been benchmarked. History can retain up to 50 project snapshots, and rolling operations scan bounded windows.
 - Numerical tests use independent analytical fixtures, but there is no broad external-library differential test suite, property-based campaign, or formal proof.
-- The module registry/evaluator and inspector will need further decomposition if the module catalogue grows substantially. Avoid a generic plugin system until actual extension requirements justify it.
+- Extension is through build-time registration. There is no runtime plugin marketplace, remote code loading, or external plugin compatibility promise. New control types still need an explicit shared renderer implementation.
 - Browser save is explicit and storage-dependent; there is no autosave recovery, collaboration, or hosted persistence.
 
 These gaps are recorded so future claims stay proportional to the evidence. A small private local study has different acceptance requirements from a hosted multi-user scientific system.

@@ -14,24 +14,6 @@ export type ConnectionOrigin = { source: string; sourcePort: string };
 export type ModuleDraft = { type: WorkbenchKind; params?: WorkbenchNode["params"]; title?: string };
 export type GraphUpdate = (update: (graph: Graph) => Graph, record?: boolean) => void;
 
-export const moduleIcons: Record<WorkbenchKind, string> = {
-  source: "▤",
-  field: "↳",
-  filter: "≡",
-  align: "⋈",
-  transform: "Δ",
-  scale: "×",
-  smooth: "∿",
-  rolling: "◷",
-  arithmetic: "±",
-  correlation: "ρ",
-  regression: "ƒ",
-  pressure: "⇅",
-  chart: "⌁",
-  table: "▦",
-  export: "↓",
-};
-
 export function firstNumericColumn(dataset?: Dataset) {
   return (
     dataset?.columns.find(
@@ -110,21 +92,4 @@ export function deleteElements(
 ): Graph {
   const remaining = removeNodes(graph, new Set(nodes.map((node) => node.id)));
   return removeEdges(remaining, new Set(edges.map((edge) => edge.id)));
-}
-
-export function moduleDetail(node: WorkbenchNode, datasets: Dataset[]) {
-  switch (node.type) {
-    case "source":
-      return (
-        datasets.find((dataset) => dataset.id === node.params.datasetId)?.name ?? "Choose dataset"
-      );
-    case "align":
-      return String(node.params.mode);
-    case "transform":
-    case "rolling":
-    case "arithmetic":
-      return String(node.params.operation);
-    default:
-      return WORKBENCH_MODULES[node.type].title;
-  }
 }

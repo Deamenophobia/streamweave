@@ -1,6 +1,6 @@
+import { moduleIcons } from "./modulePresentation";
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { WORKBENCH_MODULES, type WorkbenchNode } from "@streamweave/core";
-import { moduleIcons } from "./editorModel";
 
 export type VisualNode = Node<{ module: WorkbenchNode; state: string; detail: string }, "module">;
 
