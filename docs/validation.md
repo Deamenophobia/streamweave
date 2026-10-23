@@ -4,7 +4,7 @@ Validation covers the local implementation and reproducibility. It makes no clai
 
 ## Automated checks — v0.2
 
-`npm run check` passes TypeScript checks, all **33 tests**, and both production builds. `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` still executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the lockfile update on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
+`npm run check` passes formatting, TypeScript checks, all **39 tests**, and both production builds. `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` still executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the lockfile update on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
 
 The 13 workbench tests cover:
 
@@ -18,9 +18,22 @@ The 13 workbench tests cover:
 
 The retained 20 legacy tests cover pressure scale invariance, left-boundary expiration, silence, half-life semantics, extreme weights, duplicate/late events, stream isolation, capacity, warmup, deterministic replay without lookahead, irregular endpoints, history wraparound, an independent batch reference, v1 pipeline configuration/rewiring, and parser/export behavior.
 
-## Browser acceptance results — 2026-10-24
+Six editor tests cover immutable connected insertion, compatible module search, atomic deletion, grouped drag history, bounded undo/redo, and importing data without creating nodes.
 
-The following were exercised through the actual local UI:
+## Canvas revision acceptance — 2026-10-24
+
+- Module search leaves the graph unchanged. Toolbar insertion enters placement mode; the chosen module appeared at the clicked screen coordinates. Right-click search inserts at its invocation point.
+- Dragging Sensor A's series port into empty space offered compatible modules only. Choosing Smooth created a ready module and its incoming wire; one Undo removed both and Redo restored both.
+- Delete removed the selected connected module and its wire. One Undo restored both. Wires remained visible after recalculation and undo.
+- A module drag was one undo step. Shift+A opened search; Escape cancelled it without changing the graph.
+- Importing both example CSVs into a blank workspace created two data assets and zero modules. Clicking an asset inspected its table. Place source created a bound source at the chosen point; dragging the second asset created its own source.
+- The full-width canvas, contextual search, floating inspector, and data drawer were checked in the browser after the component refactor.
+- Changing the correlation window from 20 to 8 recomputed its chart (116 to 109 valid samples); Undo restored 20. All eight wires stayed visible.
+- Save/reload and Download project → Blank workspace → Open restored the two datasets, nine modules, eight connections, and ready outputs. No new browser errors or warnings were logged during the final checks after reload.
+
+## Initial v0.2 browser acceptance — 2026-10-24
+
+The following were exercised through the earlier v0.2 UI. Module creation and import gestures were subsequently replaced by the canvas revision above:
 
 - Default study: **2 sources, 9 modules, 8 connections, 4 independent outputs**, all ready.
 - Switching alignment from a regular grid to exact intersection changed the aligned output from **121 to 37 rows** and recomputed downstream analyses.

@@ -18,30 +18,32 @@ npm run dev
 Open **http://127.0.0.1:5187**. The initial study connects two synthetic sensor datasets sampled at different intervals. An alignment module feeds rolling correlation, descriptive linear regression, and an export. Regression has separate coefficient and residual ports.
 
 ```sh
-npm run check          # type checking, 33 behavioral/numerical tests, production builds
+npm run check          # formatting, types, 39 behavioral/numerical tests, production builds
 npm run demo           # execute the multi-source study without the browser
 npm run demo:pressure  # retained signed-event replay example
 ```
 
 ## Compose a workflow
 
-1. Import one or several CSV, JSON, or JSONL files. Each file creates its own dataset and source module. Try [sensor-a.csv](examples/sensor-a.csv) and [sensor-b.csv](examples/sensor-b.csv).
-2. Click or drag modules from the library. Modules can appear repeatedly. Move them freely and use **Focus canvas** for more room.
+1. Open **Data** to import CSV, JSON, or JSONL files. Importing creates data assets. Drag a dataset onto the canvas or use **Place source** and click its destination to create a source module. Clicking the dataset itself opens an inspection. Try [sensor-a.csv](examples/sensor-a.csv) and [sensor-b.csv](examples/sensor-b.csv).
+2. Right-click empty canvas space or press **Shift+A** to search for a module at the pointer. The **Add module** button opens the same search, then lets you click where to place the module. Search alone changes nothing; Escape cancels. Modules can appear repeatedly.
 3. Connect compatible named ports by dragging between handles or clicking the output and then the input. One output can feed many downstream modules. Alignment and charts accept multiple inputs.
-4. Select a module to configure it. **Duplicate module** copies its settings into an independent instance; connect its ports to create another branch. Disconnect in the inspector or select an edge and press Delete.
+4. Drag an output wire into empty space to search compatible modules; choosing one creates and connects it there. Select an existing module to configure it in the floating inspector. **Duplicate module** copies its settings and asks where to place the copy. Disconnect in the inspector or select an edge and press Delete.
 5. Inspect any module as a table or chart. Tables paginate through every row; charts preserve gaps, display units, and provide a time cursor. Invalid modules show an error; independent branches continue.
 6. **Save** stores the graph and datasets in this browser. **Download project** creates a portable project; **Open** restores it. Output CSV contains values and quality states. Results JSON includes the graph, parameters, datasets, units, and engine version.
 
 Calculations run automatically after changes; **Run** also triggers recomputation. Examples and Blank workspace replace the current in-memory project, so save/download work before switching. Browser storage has a size quota; use a project file for larger studies.
 
+**Undo / Redo** or **Ctrl+Z / Ctrl+Shift+Z** work while the canvas has focus (Command on macOS; Ctrl+Y also redoes). A drag is one undo step. Creating a connected module or deleting a module with its wires is also one step. History retains 50 edits in memory and is not included in project files. Moving nodes does not rerun calculations.
+
 ## Modules
 
-| Category | Available modules |
-|---|---|
-| Data | Dataset; Select series from a timestamped table or aligned frame |
-| Process | Row filter; timestamp alignment; difference / percent / log change / lag; scale and offset; time-based exponential smoothing |
-| Analyze | Rolling mean / sample standard deviation / min / max / count; pair arithmetic; rolling Pearson correlation; descriptive linear fit; optional directional pressure |
-| Output | Chart with multiple inputs and separate scales; paginated table; CSV / reproducible JSON export |
+| Category | Available modules                                                                                                                                                 |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data     | Dataset; Select series from a timestamped table or aligned frame                                                                                                  |
+| Process  | Row filter; timestamp alignment; difference / percent / log change / lag; scale and offset; time-based exponential smoothing                                      |
+| Analyze  | Rolling mean / sample standard deviation / min / max / count; pair arithmetic; rolling Pearson correlation; descriptive linear fit; optional directional pressure |
+| Output   | Chart with multiple inputs and separate scales; paginated table; CSV / reproducible JSON export                                                                   |
 
 The graph has no prescribed path and no compulsory composite index. A column extracted from an aligned frame can feed a transformation, another alignment, a statistic, or its own output. Cycles, incompatible port types, and duplicate connections are rejected.
 
@@ -63,7 +65,7 @@ Alignment supports exact intersection, exact union, or a regular grid using the 
 ## Use the core
 
 ```ts
-import { executeWorkbench, multiSourceExample, parseProject } from '@streamweave/core';
+import { executeWorkbench, multiSourceExample, parseProject } from "@streamweave/core";
 
 const project = multiSourceExample();
 const restored = parseProject(JSON.stringify(project));

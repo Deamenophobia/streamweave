@@ -4,7 +4,8 @@ export class HistoryBuffer<T> {
   private cursor = 0;
   private count = 0;
   constructor(readonly capacity: number) {
-    if (!Number.isSafeInteger(capacity) || capacity < 1) throw new Error("History capacity must be a positive integer.");
+    if (!Number.isSafeInteger(capacity) || capacity < 1)
+      throw new Error("History capacity must be a positive integer.");
     this.values = new Array<T | undefined>(capacity);
   }
   push(value: T): void {
@@ -13,7 +14,14 @@ export class HistoryBuffer<T> {
     this.count = Math.min(this.count + 1, this.capacity);
   }
   toArray(): T[] {
-    return Array.from({ length: this.count }, (_, i) => this.values[(this.cursor - this.count + i + this.capacity) % this.capacity]!);
+    return Array.from(
+      { length: this.count },
+      (_, i) => this.values[(this.cursor - this.count + i + this.capacity) % this.capacity]!,
+    );
   }
-  reset(): void { this.values.fill(undefined); this.cursor = 0; this.count = 0; }
+  reset(): void {
+    this.values.fill(undefined);
+    this.cursor = 0;
+    this.count = 0;
+  }
 }
