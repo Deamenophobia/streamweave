@@ -1,0 +1,16 @@
+image: node:22-bookworm
+
+stages:
+  - verify
+
+verify:
+  stage: verify
+  script:
+    - npm ci --no-fund
+    - npm run check
+    - npm run demo
+  artifacts:
+    paths:
+      - apps/workbench/dist/
+      - packages/core/dist/
+    expire_in: 7 days
