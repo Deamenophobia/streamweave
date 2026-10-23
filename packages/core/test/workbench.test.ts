@@ -47,6 +47,46 @@ const edge = (
   targetPort: string,
 ): WorkbenchEdge => ({ id, source, sourcePort, target, targetPort });
 
+test("overflowing statistical moments fail instead of reporting zero correlation", () => {
+  const frame = alignSeries(
+    [
+      { key: "x", series: series([1, 2, 3]) },
+      { key: "y", series: series([1e200, 2e200, 3e200]) },
+    ],
+    "intersection",
+    1000,
+    1000,
+  );
+  assert.throws(() => rollingCorrelation(frame, "x", "y", 3, 3), /overflowed.*Rescale/);
+  assert.throws(() => fitLinear(frame, "x", "y"), /overflowed.*Rescale/);
+});
+
+test("connection validation accepts 120 wires and rejects the next edit before mutation", () => {
+  const sources = Array.from({ length: 5 }, (_, i) => makeNode(`source_${i}`, "source", 0, i));
+  const charts = Array.from({ length: 25 }, (_, i) => makeNode(`chart_${i}`, "chart", 1, i));
+  const graph: WorkbenchGraph = {
+    version: 2,
+    name: "Connection bound",
+    nodes: [...sources, ...charts],
+    edges: sources.flatMap((source) =>
+      charts
+        .slice(0, 24)
+        .map((chart) => edge(`${source.id}_${chart.id}`, source.id, "series", chart.id, "in")),
+    ),
+  };
+  assert.deepEqual(validateWorkbench(graph), []);
+  assert.match(
+    workbenchConnectionError(graph, {
+      source: "source_0",
+      sourcePort: "series",
+      target: "chart_24",
+      targetPort: "in",
+    }) ?? "",
+    /120 connections/,
+  );
+  assert.equal(graph.edges.length, 120);
+});
+
 test("generic imports need no direction labels and preserve numeric, text and missing cells", () => {
   const d = parseDataset(
     "timestamp,reading,site\n2026-01-01T00:01:00Z,,north\n2026-01-01T00:00:00Z,2.5,south",

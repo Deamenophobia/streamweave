@@ -1,0 +1,15 @@
+**Streamweave v0.2**
+
+- [Home](home.md)
+- [Getting started](getting-started.md)
+- [Canvas guide](canvas-guide.md)
+- [Data and time](data-and-time.md)
+- [Module reference](module-reference.md)
+- [Results and projects](results-and-projects.md)
+- [Numerical contract](../analytics.md)
+- [Architecture](../architecture.md)
+- [Contributor guide](contributing.md)
+- [Code quality](../code-quality.md)
+- [Validation record](../validation.md)
+- [Troubleshooting](troubleshooting.md)
+- [Scope and roadmap](scope-and-roadmap.md)

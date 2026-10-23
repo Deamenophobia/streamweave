@@ -4,10 +4,10 @@ import {
   appendDatasets,
   downloadProject,
   readDatasets,
-  readProject,
   saveProject,
   type ProjectActions,
 } from "./projectFiles";
+import { createProjectOpener } from "./projectOpening";
 import type { ProjectHistory } from "./useProjectHistory";
 
 type Options = {
@@ -21,6 +21,7 @@ type Options = {
 export function useProjectDocuments({ history, version, load, imported, notify }: Options) {
   const { project, setProject } = history;
   const latest = useRef({ project, version });
+  const [openProject] = useState(() => createProjectOpener(() => latest.current.version));
   const [importing, setImporting] = useState(false);
   useEffect(() => {
     latest.current = { project, version };
@@ -49,7 +50,9 @@ export function useProjectDocuments({ history, version, load, imported, notify }
     },
     async open(file) {
       try {
-        load(await readProject(file));
+        const opened = await openProject(file);
+        if (!opened) return;
+        load(opened);
         notify(`Opened ${file.name}.`);
       } catch (error) {
         notify(`Could not open project: ${(error as Error).message}`);

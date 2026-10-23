@@ -54,6 +54,8 @@ Import and insertion are distinct actions. A dataset click previews data; creati
 
 The workspace has three routes: `#/canvas`, `#/data/<dataset-id>`, and `#/results/<module-id>`. Only the active view is visible. Project/history and worker ownership remain above navigation. The canvas mounts on its first visit so React Flow can measure a visible container, then stays mounted while hidden to retain its viewport and selection. Dataset and result views render their selected document only. Navigation does not edit or rerun the graph; a missing referenced ID displays an unavailable state.
 
+`projectOpening.ts` owns asynchronous project-read ordering: only the latest request from the current document version can replace the project. `useProjectDocuments.ts` bridges that coordinator to React state and notices. Import bounds are checked before reading too many files and during row accumulation, then checked again against the existing workspace when appended.
+
 ## Reuse after reviewing earlier assets
 
 The owner's earlier analytical lab was examined for data adapters, factor factories, time-series routines, artifacts, and correlation workflows. The useful contributions are architectural patterns; the general executor and numerical kernels here are new TypeScript implementations with explicit tests.

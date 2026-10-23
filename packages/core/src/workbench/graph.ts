@@ -238,6 +238,7 @@ export function workbenchConnectionError(
   graph: WorkbenchGraph,
   edge: Omit<WorkbenchEdge, "id">,
 ): string | null {
+  if (graph.edges.length >= 120) return "This workspace supports up to 120 connections.";
   const source = graph.nodes.find((n) => n.id === edge.source),
     target = graph.nodes.find((n) => n.id === edge.target);
   if (!source || !target) return "Unknown module.";

@@ -5,6 +5,23 @@ import { compatibleKinds, deleteElements, insertModule, sourceDraft } from "../s
 import { appendDatasets, readDatasets } from "../src/projectFiles";
 import { initialHistory, projectHistory } from "../src/projectHistory";
 
+test("oversized import batches stop before reading excess files", async () => {
+  let reads = 0;
+  class CountedFile extends File {
+    override async text() {
+      reads++;
+      return super.text();
+    }
+  }
+  const small = new CountedFile(["timestampMs,value\n0,1"], "small.csv");
+  await assert.rejects(readDatasets(Array(13).fill(small)), /12 datasets/);
+  assert.equal(reads, 0);
+  const rows = Array.from({ length: 20_000 }, (_, i) => `${i},${i}`).join("\n");
+  const large = new CountedFile([`timestampMs,value\n${rows}`], "large.csv");
+  await assert.rejects(readDatasets([large, large, large, small]), /50,000 rows/);
+  assert.equal(reads, 3);
+});
+
 test("inserting at a chosen point connects a compatible module in one reversible edit", () => {
   const project = multiSourceExample();
   const original = JSON.stringify(project);

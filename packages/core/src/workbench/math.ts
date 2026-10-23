@@ -248,6 +248,8 @@ function moments(values: { x: number; y: number }[]) {
     yy += (p.y - my) ** 2;
     xy += (p.x - mx) * (p.y - my);
   }
+  if (![mx, my, xx, yy, xy].every(Number.isFinite))
+    throw new Error("Statistical moments overflowed. Rescale the input values.");
   return { mx, my, xx, yy, xy };
 }
 

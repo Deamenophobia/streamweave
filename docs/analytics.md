@@ -35,7 +35,7 @@ It requires at least three pairs and the configured minimum; zero variance is un
 
 Linear fit is full-sample OLS with an intercept: `b = Sxy / Sxx`, `a = mean(y) − b × mean(x)`. At least three complete pairs and nonconstant X are required. It outputs pair count, intercept, slope, `R² = 1 − SSE / Syy`, and `RMSE = sqrt(SSE / n)`. Constant Y gives null R². Residuals equal `y − (a + b×x)`, retain original gaps, and carry the fit completion time. R² and RMSE describe the fitting sample; they are not holdout performance. Filter inputs before fitting to choose a period. No prediction or hypothesis-testing claims follow from the fit.
 
-Arithmetic overflow becomes an undefined value or an explicit module error; non-finite outputs never pass the graph executor. Rolling kernels scan bounded windows; the current implementation prioritizes auditable behavior over maximum throughput.
+Arithmetic overflow becomes an undefined value or an explicit module error; non-finite outputs never pass the graph executor. Correlation and linear fit explicitly reject overflowing statistical moments, including cases where division by an infinite intermediate could otherwise produce a misleading finite value. Rescale upstream when this occurs. Rolling kernels scan bounded windows; the current implementation prioritizes auditable behavior over maximum throughput.
 
 ## Optional signed-event module and legacy API
 

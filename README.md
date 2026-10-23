@@ -2,6 +2,8 @@
 
 A visual numerical workbench for multiple datasets, composable calculations, and reproducible outputs.
 
+Read the [GitLab wiki](https://gitlab.com/Deamenophobia/streamweave/-/wikis/home) or its [versioned documentation source](docs/wiki/home.md) for tutorials, module reference, architecture, and the [code-quality review](docs/code-quality.md).
+
 Import independent sources, align their timestamps, and connect calculations on a canvas. Branch a dataset into several analyses, duplicate a module with different parameters, and inspect each intermediate result. Charts, tables, and exports remain separate outputs.
 
 ![Streamweave numerical workbench](docs/workbench.png)
@@ -18,7 +20,7 @@ npm run dev
 Open **http://127.0.0.1:5187**. The initial study connects two synthetic sensor datasets sampled at different intervals. An alignment module feeds rolling correlation, descriptive linear regression, and an export. Regression has separate coefficient and residual ports.
 
 ```sh
-npm run check          # formatting, types, 39 behavioral/numerical tests, production builds
+npm run check          # formatting, docs, types, 45 behavioral/numerical tests, production builds
 npm run demo           # execute the multi-source study without the browser
 npm run demo:pressure  # retained signed-event replay example
 ```

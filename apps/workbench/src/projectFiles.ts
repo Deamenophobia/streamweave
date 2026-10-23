@@ -38,16 +38,24 @@ export async function readProject(file: File): Promise<WorkbenchProject> {
 }
 
 export async function readDatasets(files: File[]): Promise<Dataset[]> {
+  if (files.length > 12) throw new Error("Import at most 12 datasets at a time.");
   const datasets: Dataset[] = [];
+  let rowCount = 0;
   for (const file of files) {
     if (file.size > 5_000_000) throw new Error(`${file.name} exceeds 5 MB.`);
     const extension = file.name.split(".").at(-1)?.toLowerCase();
     if (extension !== "csv" && extension !== "json" && extension !== "jsonl") {
       throw new Error("Choose CSV, JSON, or JSONL datasets.");
     }
-    datasets.push(
-      parseDataset(await file.text(), extension, createId("dataset"), file.name.slice(0, 120)),
+    const dataset = parseDataset(
+      await file.text(),
+      extension,
+      createId("dataset"),
+      file.name.slice(0, 120),
     );
+    rowCount += dataset.rows.length;
+    if (rowCount > 50_000) throw new Error("Import at most 50,000 rows at a time.");
+    datasets.push(dataset);
   }
   return datasets;
 }

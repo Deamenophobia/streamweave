@@ -4,9 +4,9 @@ Validation covers the local implementation and reproducibility. It makes no clai
 
 ## Automated checks — v0.2
 
-`npm run check` passes formatting, TypeScript checks, all **39 tests**, and both production builds. `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` still executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the lockfile update on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
+`npm run check` passes formatting, documentation-link validation, TypeScript checks, all **45 tests**, and both production builds. `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` still executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the quality review on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
 
-The 13 workbench tests cover:
+The 15 workbench tests cover:
 
 - Generic imports without direction/weight, explicit nulls, timestamp sorting and duplicate rejection.
 - Alignment by timestamp rather than array position, intersection/union, missing/stale distinctions, and delayed/out-of-order release handling.
@@ -15,10 +15,13 @@ The 13 workbench tests cover:
 - Analytical correlation/OLS fixtures with known slope, intercept, residuals, and zero-variance behavior.
 - Known rolling mean/sample deviation/EMA values, lag, zero denominators, missing values, and unit compatibility.
 - Portable project round-trips, both complete examples, CSV quoting/formula-text escaping, size/count bounds, frame-to-series composition, residual gaps, and availability restrictions.
+- Explicit statistical-moment overflow errors and rejection of the 121st connection before mutation.
 
 The retained 20 legacy tests cover pressure scale invariance, left-boundary expiration, silence, half-life semantics, extreme weights, duplicate/late events, stream isolation, capacity, warmup, deterministic replay without lookahead, irregular endpoints, history wraparound, an independent batch reference, v1 pipeline configuration/rewiring, and parser/export behavior.
 
-Six editor tests cover immutable connected insertion, compatible module search, atomic deletion, grouped drag history, bounded undo/redo, and importing data without creating nodes.
+Seven editor tests cover immutable connected insertion, compatible module search, atomic deletion, grouped drag history, bounded undo/redo, importing data without creating nodes, and stopping oversized import batches before excess file reads.
+
+Three project-opening tests use controlled asynchronous completions to verify that late reads cannot replace a newer workspace, newer open requests win, and stale failures do not surface in another document. See [the code-quality review](code-quality.md) for scope and remaining gaps.
 
 ## Workspace navigation acceptance — 2026-10-24
 
