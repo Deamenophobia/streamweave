@@ -1,26 +1,52 @@
 # Architecture and reuse decisions
 
-Streamweave is a small extraction of useful analytical methods and interaction patterns from the owner's earlier projects. It is a new implementation with an explicit generic event schema; it does not carry over the old service deployment or application dependencies.
+Streamweave v0.2 is a general numerical workbench. Its canvas describes the calculation itself: multiple independent sources, repeated module types, branches, and several outputs. The v0.1 pressure pipeline remains an optional legacy API.
 
 ## Boundaries
 
-1. **Core:** pure functions and forward-only accumulators. Callers supply time and data. No credentials, network access, storage, framework state, or wall-clock reads.
-2. **Pipeline:** versioned JSON describing typed connections and parameters. Validation checks cardinality, compatible ports, unique IDs, configuration bounds, and cycles. The current supported path is source → window → pressure → optional smoothing → output.
-3. **Workbench:** React Flow editor and inspector. A Web Worker executes replay; the UI only chooses the inspected frame. Coordinates do not affect analysis. Save persists the pipeline in browser-local storage; recordings remain in memory.
-4. **Adapters:** future integrations translate observations into the generic schema. They own event identity, units, direction semantics, reconnect behavior, and late-data policy.
+1. **Data contracts:** a table contains typed scalar columns; a series contains timestamped values, units, quality states, and optional availability times; an aligned frame contains several numeric columns on one time axis. Dataset IDs are distinct from module IDs, so several source modules can select different columns of the same dataset.
+2. **Module registry:** each definition declares input/output ports, compatible data kinds, input cardinality, defaults, and descriptive metadata. The inspector and library use that registry. Mathematical kernels remain independent of the UI.
+3. **Graph executor:** validates IDs, ports, cycles, sizes, and parameters, then evaluates a topological order. It uses actual incoming edges and computes a shared parent once. Errors block only descendants; disconnected valid branches still execute. Positions do not affect numerical results.
+4. **Workbench:** React Flow provides editing, named handles, duplication, dragging, and deletion. A worker performs calculation. Changing data or parameters terminates the previous worker; moving nodes does not recompute. Outputs expose values through paginated tables, individual-scale charts, and downloads.
+5. **Persistence:** version 2 project JSON embeds graph and datasets. Browser Save uses a separate v2 storage key and leaves v1 storage alone. Results JSON embeds the current project and engine version; CSV is a flat inspection/export format, not the complete project format.
 
-## What was retained
+## Example with reusable branches
 
-| Earlier asset | Retained idea | Refinement |
+```mermaid
+flowchart LR
+  A[Source A] --> J[Align timestamps]
+  B[Source B] --> J
+  J --> C[Rolling correlation]
+  J --> F[Linear fit]
+  J --> E[Aligned data export]
+  C --> P[Chart]
+  F -->|model| T[Coefficient table]
+  F -->|residuals| R[Residual chart]
+  J --> S[Select series]
+  S --> D[Difference or lag]
+  D --> Q[Another analysis or output]
+```
+
+The built-in study implements the first four outputs. The last branch illustrates additional composition available through the library. To compare multiple window lengths, duplicate a correlation module, connect it to the same aligned frame, configure its window, and connect both outputs to a chart.
+
+## Reuse after reviewing earlier assets
+
+The owner's earlier analytical lab was examined for data adapters, factor factories, time-series routines, artifacts, and correlation workflows. The useful contributions are architectural patterns; the general executor and numerical kernels here are new TypeScript implementations with explicit tests.
+
+| Earlier component | Useful idea | Decision in this workbench |
 |---|---|---|
-| Time-window flow tracker | Signed-weight aggregation and normalized directional pressure | Explicit millisecond windows, expiration during silence, correct half-life semantics |
-| Visual analytical canvas | Typed ports, module configuration, replay inspection | Small schema; connections determine the computation; invalid routes fail visibly |
-| Data visualization engine | Bounded chronological history | Generic typed buffer; capacity validation; kept separate from analytical-window retention |
-| Multi-source data service | Per-stream isolation and separate flow measures | Explicit units and event-time clock; no wall-clock coupling |
-| Signal composition service | Signal freshness and separation of measurements | Null output for insufficient activity; no hard-coded prediction-confidence values |
+| Data-source adapter abstraction | Normalize independent sources behind a common contract | Generic timestamped datasets; file adapters first |
+| Factor registry and configurable factories | Reusable modules with declared configuration | Typed registry plus unrestricted acyclic composition |
+| Versioned artifacts | Save enough information to reproduce a result | Embedded datasets, graph, parameters, units, version |
+| Time-series statistics | Small reusable numerical kernels | Mean, sample deviation, EMA, Pearson correlation, and OLS with analytical fixtures |
+| Correlation orchestration | Compare separate sources | Join timestamps explicitly; do not pair trailing array positions |
+| Visual strategy canvas | Configure and compose calculations | Repeated instances, multiple inputs/outputs, independent branches |
+| Signed-flow tracker | Normalized signed-weight pressure | Optional module using the already-tested legacy accumulator |
 
-## Deferred after review
+Some legacy routines and domain-specific services were simplified or tightly coupled. They were not copied as general-purpose scientific implementations. GPU rendering, service orchestration, identity/billing, external execution, and unvalidated predictive ensembles are outside this release. Private inventory notes record source paths and revisions locally.
 
-The high-performance GPU renderer is disproportionate to this first workbench. The existing identity, billing, remote-service routing, execution, and domain-specific monitoring components do not belong in the analytics core. A read-only automation interface can be added once the small core API stabilizes. Forecast ensembles and calibration require separate empirical work.
+## Extension boundary
 
-The detailed source inventory, exact paths, revision IDs, and source-specific findings are maintained separately in the owner's local project records. This repository describes the generic software actually implemented. Third-party dependency licenses are retained through their packages; this extraction grants no new rights to earlier repositories.
+A future module needs port contracts, parameter validation, a deterministic kernel, inspector controls, and numerical tests. A future data connector owns retrieval, units, timestamps, release/revision semantics, and normalization; the core should still receive explicit data. There is no arbitrary code evaluation or network request inside a graph.
+
+The workbench is bounded batch calculation, not a live streaming scheduler. The old incremental pressure API remains independently usable. Rolling kernels currently scan each bounded trailing window, O(rows × window); they make no low-latency claim. Worker cancellation prevents stale results from replacing newer edits.

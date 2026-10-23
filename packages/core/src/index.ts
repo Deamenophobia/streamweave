@@ -4,3 +4,7 @@ export * from "./buffer.js";
 export * from "./graph.js";
 export * from "./io.js";
 export * from "./scenarios.js";
+export * from "./workbench/data.js";
+export * from "./workbench/math.js";
+export * from "./workbench/graph.js";
+export * from "./workbench/examples.js";

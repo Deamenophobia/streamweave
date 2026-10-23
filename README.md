@@ -1,10 +1,10 @@
 # Streamweave
 
-A visual workbench for event-stream analysis, directional indicators, and reproducible replay.
+A visual numerical workbench for multiple datasets, composable calculations, and reproducible outputs.
 
-Build an analytical pipeline on a canvas, inspect its intermediate measurements, and replay a recording against exactly the same core used by streaming callers. Files are processed locally in the browser.
+Import independent sources, align their timestamps, and connect calculations on a canvas. Branch a dataset into several analyses, duplicate a module with different parameters, and inspect each intermediate result. Charts, tables, and exports remain separate outputs.
 
-![Streamweave workbench](docs/workbench.png)
+![Streamweave numerical workbench](docs/workbench.png)
 
 ## Run locally
 
@@ -15,77 +15,73 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:5187**. Choose an example recording, select a canvas module to edit its parameters, and move the replay slider to inspect a moment in time.
+Open **http://127.0.0.1:5187**. The initial study connects two synthetic sensor datasets sampled at different intervals. An alignment module feeds rolling correlation, descriptive linear regression, and an export. Regression has separate coefficient and residual ports.
 
 ```sh
-npm run check     # type checking, numerical/behavioral tests, production build
-npm run demo      # headless replay example
+npm run check          # type checking, 33 behavioral/numerical tests, production builds
+npm run demo           # execute the multi-source study without the browser
+npm run demo:pressure  # retained signed-event replay example
 ```
 
-## What works
+## Compose a workflow
 
-- A React Flow canvas with typed ports, editable parameters, connection validation, and an optional smoothing stage.
-- Time-based rolling windows, signed-weight pressure, exponential decay, activity rates, effective sample size, and separate pressure-change measurements.
-- Deterministic event-time replay in a browser worker. Quiet intervals expire old observations.
-- CSV, JSON, and JSONL recording import; CSV result export.
-- Pipeline JSON import/export and browser-local pipeline saving.
-- Four seeded examples: reversal, balanced activity, sustained positive flow, and silence.
-- A dependency-free TypeScript core that also builds to JavaScript and type declarations for Node consumers.
+1. Import one or several CSV, JSON, or JSONL files. Each file creates its own dataset and source module. Try [sensor-a.csv](examples/sensor-a.csv) and [sensor-b.csv](examples/sensor-b.csv).
+2. Click or drag modules from the library. Modules can appear repeatedly. Move them freely and use **Focus canvas** for more room.
+3. Connect compatible named ports by dragging between handles or clicking the output and then the input. One output can feed many downstream modules. Alignment and charts accept multiple inputs.
+4. Select a module to configure it. **Duplicate module** copies its settings into an independent instance; connect its ports to create another branch. Disconnect in the inspector or select an edge and press Delete.
+5. Inspect any module as a table or chart. Tables paginate through every row; charts preserve gaps, display units, and provide a time cursor. Invalid modules show an error; independent branches continue.
+6. **Save** stores the graph and datasets in this browser. **Download project** creates a portable project; **Open** restores it. Output CSV contains values and quality states. Results JSON includes the graph, parameters, datasets, units, and engine version.
 
-The initial graph supports one source, one window, one pressure stage, one output, and optionally one smoother. Remove a module with the inspector or Delete; use the module list to add it back and reconnect compatible ports. Invalid graphs show an error and do not generate results.
+Calculations run automatically after changes; **Run** also triggers recomputation. Examples and Blank workspace replace the current in-memory project, so save/download work before switching. Browser storage has a size quota; use a project file for larger studies.
 
-## Event format
+## Modules
 
-```json
-[
-  {"id":"a1","stream":"sensor-A","timestampMs":0,"direction":1,"weight":7,"value":100.2},
-  {"id":"a2","stream":"sensor-A","timestampMs":500,"direction":-1,"weight":3,"value":100.1}
-]
+| Category | Available modules |
+|---|---|
+| Data | Dataset; Select series from a timestamped table or aligned frame |
+| Process | Row filter; timestamp alignment; difference / percent / log change / lag; scale and offset; time-based exponential smoothing |
+| Analyze | Rolling mean / sample standard deviation / min / max / count; pair arithmetic; rolling Pearson correlation; descriptive linear fit; optional directional pressure |
+| Output | Chart with multiple inputs and separate scales; paginated table; CSV / reproducible JSON export |
+
+The graph has no prescribed path and no compulsory composite index. A column extracted from an aligned frame can feed a transformation, another alignment, a statistic, or its own output. Cycles, incompatible port types, and duplicate connections are rejected.
+
+## Generic data format
+
+```csv
+timestamp,temperature,site
+2026-01-01T00:00:00Z,21.4,north
+2026-01-01T00:01:00Z,,north
+2026-01-01T00:02:00Z,22.1,north
 ```
 
-CSV uses `id,stream,timestampMs,direction,weight,value`; `value` is optional. `timestampMs` is a non-negative integer, expressed in milliseconds. All weights within a stream must use the same unit. Direction is explicitly `1` or `-1`; adapters are responsible for its meaning. Separate stream identifiers keep unrelated observations apart. Imports reject duplicate IDs within a stream and malformed rows.
+JSON accepts an array of row objects; JSONL accepts one object per line. Use `timestampMs` (integer epoch milliseconds) or `timestamp` (ISO date-time with an explicit timezone). Numbers, text, and null cells are supported. Numeric columns must not mix numbers and text. Rows are sorted; duplicate timestamps are rejected. Aggregate simultaneous records or split them into separate datasets before import.
 
-Import limits: 5 MB and 20,000 events. Replay is limited to 10,000 frames; increase the sample interval for longer recordings. The visual examples are synthetic demonstrations of mechanics, not evidence of prediction quality.
+Optional `availableAtMs` records when an observation became available and must not precede its timestamp. Each source chooses its numeric value column and unit. Ordinary datasets require neither direction nor weight. The optional signed-event module alone requires `direction` (`1` or `-1`) and positive `weight`, with availability at event time.
+
+Alignment supports exact intersection, exact union, or a regular grid using the latest previously available observation and an explicit maximum age. It never pairs unrelated rows by position or fills gaps with zero. Output states distinguish `valid`, `missing`, `stale`, `warming`, and `undefined`.
 
 ## Use the core
 
 ```ts
-import { PressureWindow } from '@streamweave/core';
+import { executeWorkbench, multiSourceExample, parseProject } from '@streamweave/core';
 
-const window = new PressureWindow('sensor-A', {
-  windowMs: 30_000,
-  halfLifeMs: 10_000,
-  minEvents: 2,
-});
-window.push({id: 'a', stream: 'sensor-A', timestampMs: 0, direction: 1, weight: 7});
-window.push({id: 'b', stream: 'sensor-A', timestampMs: 0, direction: -1, weight: 3});
-console.log(window.snapshot(0).pressure); // 40
-console.log(window.snapshot(30_000).status); // 'empty'
+const project = multiSourceExample();
+const restored = parseProject(JSON.stringify(project));
+const result = executeWorkbench(restored.graph, restored.datasets);
+console.log(result.nodes.fit.outputs.model);
+console.log(result.nodes.correlation.outputs.series);
 ```
 
-The repository uses npm workspaces; `npm run build` produces `packages/core/dist`. The core has no browser or network dependency. Packages are private and are not published to a registry.
+The dependency-free TypeScript core builds to JavaScript and declarations in `packages/core/dist`. It reads no wall clock, network, browser state, or credentials. The workbench runs it in a cancellable Web Worker. The legacy `PressureWindow`, replay, and v1 pipeline APIs remain available; the v2 UI opens v2 project files only.
 
-## Interpretation
+## Scope and limits
 
-`pressure = 100 × (positive weight − negative weight) / total weight`.
+This is an early, file-based numerical workbench. It is a foundation for a lightweight visual calculator, with a bounded set of built-in modules. Live connectors, arbitrary formulas/scripts, multivariate models, forecast evaluation, and a MATLAB-compatible language are not included.
 
-The index ranges from −100 to +100. It describes the direction of observed flow; it is not a probability or an independently validated forecast. Activity, pressure, and change in pressure are reported separately. `empty` and `warming` windows return a null index, rather than inventing a neutral or high-confidence signal.
+Limits: 12 datasets, 50,000 total input rows, 20,000 rows and 40 columns per dataset, 5 MB per imported file, 15 MB per project, 50 modules, 120 connections. Alignment is capped at 20,000 rows; rolling windows at 1,000 observations. Units are explicit labels with matching checks for addition/subtraction, not an automatic dimensional conversion system.
 
-The chart displays the full recording for inspection. The highlighted frame and every computed output use only observations available at that frame's event time.
-
-## Structure
-
-```text
-packages/core/       Pure analytics, typed graph validation, replay, parsers
-apps/workbench/      Local canvas, inspector, timeline, import/export
-examples/            Headless example and sample recording
-docs/                Numerical contract, architecture, and validation record
-```
+Correlation and regression describe the supplied sample. They do not establish causation or demonstrate forecasting accuracy. Full-sample regression residuals carry the fit completion time, and charts label them as in-sample. Synthetic examples demonstrate mechanics only.
 
 See [the numerical contract](docs/analytics.md), [architecture and reuse decisions](docs/architecture.md), and [validation record](docs/validation.md).
 
-## Current scope
-
-The UI operates on examples and imported recordings. Streaming integrations can call the core incrementally; no hosted service or external data-source adapter is included in this version. Forecast calibration, chronological holdout evaluation, and richer graph composition are future work.
-
-The repository is private. No open-source license is granted for this initial extraction. Third-party packages retain their own licenses.
+The repository and packages are private. No open-source license is granted. Third-party dependencies retain their own licenses.

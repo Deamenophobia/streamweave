@@ -2,7 +2,7 @@ import { validateEvent, type StreamEvent } from "./pressure.js";
 import { validatePipeline, type Pipeline } from "./graph.js";
 
 /** CSV reader with quoted fields, escaped quotes, CRLF, and embedded newlines. */
-function csvRows(text: string): string[][] {
+export function csvRows(text: string): string[][] {
   const rows: string[][] = []; let row: string[] = [], field = "", quoted = false, closed = false;
   for (let i = 0; i < text.length; i++) {
     const c = text[i]!;
@@ -70,5 +70,5 @@ export function toCsv(rows: readonly Record<string, unknown>[]): string {
     const safe = typeof value === "string" && /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
     return /[",\n\r]/.test(safe) ? `"${safe.replaceAll('"', '""')}"` : safe;
   };
-  return [keys.join(","), ...rows.map(row => keys.map(key => escape(row[key])).join(","))].join("\n") + "\n";
+  return [keys.map(escape).join(","), ...rows.map(row => keys.map(key => escape(row[key])).join(","))].join("\n") + "\n";
 }
