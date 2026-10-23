@@ -33,20 +33,26 @@ The built-in study implements the first four outputs. The last branch illustrate
 
 The application composes explicit interfaces; project state does not contain browser controls or canvas measurements.
 
-| Module                                                | Owns                                                                        |
-| ----------------------------------------------------- | --------------------------------------------------------------------------- |
-| `App.tsx`                                             | Project lifecycle, notices, selection, and composition of canvas/results    |
-| `projectFiles.ts`                                     | File parsing, bounded imports, browser persistence, portable downloads      |
-| `projectHistory.ts` / `useProjectHistory.ts`          | Immutable history, 50-entry bounds, undo/redo and drag checkpoints          |
-| `useGraphRun.ts`                                      | Worker lifecycle, calculation dependencies, cancellation, errors            |
-| `editorModel.ts`                                      | Pure insert/delete operations, compatible ports, source binding             |
-| `useGraphEditing.ts`                                  | React Flow changes, transient measurements/edge selection, parameter edits  |
-| `useCanvasInsertion.ts`                               | Pointer coordinates, search, placement, wire continuation, keyboard actions |
-| `CanvasWorkspace.tsx` / `CanvasPanels.tsx`            | Canvas composition and editor controls                                      |
-| `ModuleNode.tsx` / `NodePicker.tsx` / `Inspector.tsx` | Node display, searchable module choice, parameter forms                     |
-| `ResultsPanel.tsx` / `DataView.tsx`                   | Output/inspection states, charts, tables, download controls                 |
+| Module                                                                 | Owns                                                                        |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `App.tsx`                                                              | Project lifecycle, notices, selection, and composition of focused views     |
+| `WorkspaceHeader.tsx` / `WorkspaceSidebar.tsx` / `WorkspaceStatus.tsx` | Project menus, contextual navigation/library, execution status              |
+| `workspaceNavigation.ts` / `useWorkspaceNavigation.ts`                 | Hash routes, browser history, remembered dataset/result selection           |
+| `useProjectDocuments.ts`                                               | Import/open/save orchestration, document-version guards, import state       |
+| `projectFiles.ts`                                                      | File parsing, bounded imports, browser persistence, portable downloads      |
+| `projectHistory.ts` / `useProjectHistory.ts`                           | Immutable history, 50-entry bounds, undo/redo and drag checkpoints          |
+| `useGraphRun.ts`                                                       | Worker lifecycle, calculation dependencies, cancellation, errors            |
+| `editorModel.ts`                                                       | Pure insert/delete operations, compatible ports, source binding             |
+| `useGraphEditing.ts`                                                   | React Flow changes, transient measurements/edge selection, parameter edits  |
+| `useCanvasInsertion.ts`                                                | Pointer coordinates, search, placement, wire continuation, keyboard actions |
+| `CanvasWorkspace.tsx` / `NodeInspectorPanel.tsx`                       | Canvas composition, editor controls, selected module configuration          |
+| `ModuleNode.tsx` / `NodePicker.tsx` / `Inspector.tsx`                  | Node display, searchable module choice, parameter forms                     |
+| `DatasetsView.tsx`                                                     | Selected source preview/schema, import, source-placement request, CSV       |
+| `ResultsView.tsx` / `DataView.tsx`                                     | One selected module/port, charts, tables, download controls                 |
 
 Import and insertion are distinct actions. A dataset click previews data; creation requires a drag or explicit placement. Graph changes use immutable operations and do not perform I/O inside React state updaters. Connected insertion and selection deletion each commit one history entry. Measured node bounds are retained separately so recomputation cannot erase visible wires. Core tests validate numerical behavior; editor tests validate edit transactions and import boundaries. Formatting is enforced by `npm run check` and CI.
+
+The workspace has three routes: `#/canvas`, `#/data/<dataset-id>`, and `#/results/<module-id>`. Only the active view is visible. Project/history and worker ownership remain above navigation. The canvas mounts on its first visit so React Flow can measure a visible container, then stays mounted while hidden to retain its viewport and selection. Dataset and result views render their selected document only. Navigation does not edit or rerun the graph; a missing referenced ID displays an unavailable state.
 
 ## Reuse after reviewing earlier assets
 

@@ -20,7 +20,19 @@ The retained 20 legacy tests cover pressure scale invariance, left-boundary expi
 
 Six editor tests cover immutable connected insertion, compatible module search, atomic deletion, grouped drag history, bounded undo/redo, and importing data without creating nodes.
 
-## Canvas revision acceptance — 2026-10-24
+## Workspace navigation acceptance — 2026-10-24
+
+- The persistent top menus and sidebar were checked at 1280 × 720. Only one main view is visible; the document fits the window and long tables scroll inside their view.
+- Canvas → Datasets → Results → Canvas preserved all nine modules, eight wires, and the exact canvas viewport transform. Browser Back and Forward work between routes; Results remembers an explicitly selected module.
+- Directly reloading a dataset route and then opening Canvas produces the correct initial fit. The canvas initializes on its first visible visit, avoiding measurement of a hidden container.
+- Searching and clicking Smooth changed only the library's description/selection. Place module followed by Escape left the graph unchanged. Dragging Smooth from the sidebar placed it at the drop coordinates; Undo removed it.
+- Importing the two example CSVs into New workspace created two datasets and zero modules, then opened the first dataset. Preview and Columns & units showed its rows, schema, units, and missing cells. Use on canvas placed a bound source; Undo remained available from the top Edit menu in Results.
+- Results displayed one selected output at a time. Selecting Linear fit exposed separate model/residual ports, coefficient tables, and the in-sample residual chart. Edit in canvas focused that module; Open module results returned to its result view.
+- Opening a downloaded project restored two datasets, nine modules, eight connections, and ready outputs. No new browser errors appeared after the final reload.
+
+`workbench.png`, `datasets.png`, and `results.png` record the focused views. The checks below describe earlier revisions; the navigation above replaces the former drawer and stacked output layout.
+
+## Earlier canvas revision acceptance — 2026-10-24
 
 - Module search leaves the graph unchanged. Toolbar insertion enters placement mode; the chosen module appeared at the clicked screen coordinates. Right-click search inserts at its invocation point.
 - Dragging Sensor A's series port into empty space offered compatible modules only. Choosing Smooth created a ready module and its incoming wire; one Undo removed both and Redo restored both.

@@ -1,6 +1,13 @@
-import { useRef, useState, type DragEvent, type KeyboardEvent, type PointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
 import { useReactFlow, type OnConnectEnd } from "@xyflow/react";
-import { type WorkbenchKind, type WorkbenchProject } from "@streamweave/core";
+import { WORKBENCH_MODULES, type WorkbenchKind, type WorkbenchProject } from "@streamweave/core";
 import {
   compatibleKinds,
   insertModule,
@@ -26,15 +33,40 @@ type Options = {
   notify: (message: string) => void;
   undo: () => void;
   redo: () => void;
+  active: boolean;
+  requested?: ModuleDraft;
+  cancelVersion: number;
 };
 
-export function useCanvasInsertion({ project, updateGraph, select, notify, undo, redo }: Options) {
+export function useCanvasInsertion({
+  project,
+  updateGraph,
+  select,
+  notify,
+  undo,
+  redo,
+  active,
+  requested,
+  cancelVersion,
+}: Options) {
   const canvas = useRef<HTMLDivElement>(null);
   const pointer = useRef<Point | null>(null);
   const [picker, setPicker] = useState<Picker | null>(null);
   const [placement, setPlacement] = useState<ModuleDraft | null>(null);
   const [ghost, setGhost] = useState<Point | null>(null);
   const { screenToFlowPosition, getZoom } = useReactFlow();
+  const consumed = useRef<ModuleDraft | undefined>(undefined);
+
+  useEffect(() => {
+    setPicker(null);
+    setPlacement(null);
+    setGhost(null);
+    if (active && requested && consumed.current !== requested) {
+      consumed.current = requested;
+      setPlacement(requested);
+      canvas.current?.focus({ preventScroll: true });
+    }
+  }, [active, requested, cancelVersion]);
 
   function focus() {
     canvas.current?.focus({ preventScroll: true });
@@ -116,11 +148,16 @@ export function useCanvasInsertion({ project, updateGraph, select, notify, undo,
 
   function drop(event: DragEvent) {
     event.preventDefault();
+    const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    const kind = event.dataTransfer.getData("application/streamweave-module");
+    if (Object.hasOwn(WORKBENCH_MODULES, kind)) {
+      add({ type: kind as WorkbenchKind }, position);
+      return;
+    }
     const dataset = project.datasets.find(
       (dataset) => dataset.id === event.dataTransfer.getData("application/streamweave-dataset"),
     );
-    if (dataset)
-      add(sourceDraft(dataset), screenToFlowPosition({ x: event.clientX, y: event.clientY }));
+    if (dataset) add(sourceDraft(dataset), position);
   }
 
   function movePointer(event: PointerEvent<HTMLDivElement>) {

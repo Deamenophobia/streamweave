@@ -23,16 +23,22 @@ npm run demo           # execute the multi-source study without the browser
 npm run demo:pressure  # retained signed-event replay example
 ```
 
+## Navigate the workspace
+
+The persistent sidebar switches between three focused views. **Canvas** contains the graph and module library; **Datasets** inspects source rows, columns, units, and missing cells; **Results** displays one selected output or intermediate module at a time. The top **File / Edit / Examples** menus remain available in every view. Navigation preserves the graph, selection, and canvas viewport; browser Back and Forward work between views.
+
+The canvas library supports search and drag-and-drop. Clicking a module shows its description; **Place module** explicitly starts placement. Its **Sources** tab provides the same placement controls for imported datasets. Charts and source previews occupy their own views instead of being stacked below the graph.
+
 ## Compose a workflow
 
-1. Open **Data** to import CSV, JSON, or JSONL files. Importing creates data assets. Drag a dataset onto the canvas or use **Place source** and click its destination to create a source module. Clicking the dataset itself opens an inspection. Try [sensor-a.csv](examples/sensor-a.csv) and [sensor-b.csv](examples/sensor-b.csv).
+1. Open **Datasets → Import datasets** to import CSV, JSON, or JSONL files. Importing creates data assets and opens the first source for inspection. **Use on canvas** returns to the canvas and asks where to place a source module. Alternatively, drag from the canvas sidebar's **Sources** tab or use **Place source**. Try [sensor-a.csv](examples/sensor-a.csv) and [sensor-b.csv](examples/sensor-b.csv).
 2. Right-click empty canvas space or press **Shift+A** to search for a module at the pointer. The **Add module** button opens the same search, then lets you click where to place the module. Search alone changes nothing; Escape cancels. Modules can appear repeatedly.
 3. Connect compatible named ports by dragging between handles or clicking the output and then the input. One output can feed many downstream modules. Alignment and charts accept multiple inputs.
 4. Drag an output wire into empty space to search compatible modules; choosing one creates and connects it there. Select an existing module to configure it in the floating inspector. **Duplicate module** copies its settings and asks where to place the copy. Disconnect in the inspector or select an edge and press Delete.
-5. Inspect any module as a table or chart. Tables paginate through every row; charts preserve gaps, display units, and provide a time cursor. Invalid modules show an error; independent branches continue.
-6. **Save** stores the graph and datasets in this browser. **Download project** creates a portable project; **Open** restores it. Output CSV contains values and quality states. Results JSON includes the graph, parameters, datasets, units, and engine version.
+5. Open **Results** and select an output or intermediate module in the sidebar. Choose its result port, then Table or Chart. Tables paginate through every row; charts preserve gaps, display units, and provide a time cursor. **Edit in canvas** returns to the selected module; the inspector's **Open module results** returns to its results. Invalid modules show an error; independent branches continue.
+6. **File → Save in browser** stores the graph and datasets locally. **Download project** creates a portable project; **Open project** restores it. Output CSV contains values and quality states. Results JSON includes the graph, parameters, datasets, units, and engine version.
 
-Calculations run automatically after changes; **Run** also triggers recomputation. Examples and Blank workspace replace the current in-memory project, so save/download work before switching. Browser storage has a size quota; use a project file for larger studies.
+Calculations run automatically after changes; **Run** also triggers recomputation. Examples and **File → New workspace** replace the current in-memory project, so save/download work before switching. Browser storage has a size quota; use a project file for larger studies.
 
 **Undo / Redo** or **Ctrl+Z / Ctrl+Shift+Z** work while the canvas has focus (Command on macOS; Ctrl+Y also redoes). A drag is one undo step. Creating a connected module or deleting a module with its wires is also one step. History retains 50 edits in memory and is not included in project files. Moving nodes does not rerun calculations.
 

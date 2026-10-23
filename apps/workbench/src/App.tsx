@@ -1,144 +1,140 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { WorkbenchProject } from "@streamweave/core";
 import { CanvasWorkspace } from "./CanvasWorkspace";
-import { ResultsPanel, type Inspection } from "./ResultsPanel";
-import {
-  appendDatasets,
-  downloadProject,
-  loadInitialProject,
-  readDatasets,
-  readProject,
-  saveProject,
-  type ProjectActions,
-} from "./projectFiles";
+import { DatasetsView } from "./DatasetsView";
+import { ResultsView } from "./ResultsView";
+import { WorkspaceHeader } from "./WorkspaceHeader";
+import { WorkspaceSidebar } from "./WorkspaceSidebar";
+import { WorkspaceStatus } from "./WorkspaceStatus";
+import { sourceDraft, type ModuleDraft } from "./editorModel";
+import { loadInitialProject } from "./projectFiles";
 import { useGraphRun } from "./useGraphRun";
+import { useProjectDocuments } from "./useProjectDocuments";
 import { useProjectHistory } from "./useProjectHistory";
+import { useWorkspaceNavigation } from "./useWorkspaceNavigation";
 
 export function App() {
   const history = useProjectHistory(loadInitialProject);
   const { project, setProject } = history;
   const execution = useGraphRun(project);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [inspection, setInspection] = useState<Inspection>(null);
-  const [notice, setNotice] = useState("");
-  const [workspaceVersion, setWorkspaceVersion] = useState(0);
-  const documentVersion = useRef(0);
-  const latestProject = useRef(project);
+  const navigation = useWorkspaceNavigation();
+  const { route, navigate } = navigation;
+  const [canvasVisited, setCanvasVisited] = useState(route.page === "canvas");
   useEffect(() => {
-    latestProject.current = project;
-  }, [project]);
+    if (route.page === "canvas") setCanvasVisited(true);
+  }, [route.page]);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [placement, setPlacement] = useState<ModuleDraft>();
+  const [focusRequest, setFocusRequest] = useState<{ id: string }>();
+  const [notice, setNotice] = useState("");
+  const [version, setVersion] = useState(0);
+  const [cancelVersion, setCancelVersion] = useState(0);
 
-  function select(id: string | null) {
-    setSelected(id);
-    if (inspection?.kind === "node") setInspection({ kind: "node", id: id ?? "" });
+  function cancelEditing() {
+    setPlacement(undefined);
+    setCancelVersion((value) => value + 1);
   }
-
   function load(next: WorkbenchProject) {
-    documentVersion.current += 1;
+    cancelEditing();
     setProject(next);
     setSelected(null);
-    setInspection(null);
+    setFocusRequest(undefined);
     setNotice("");
-    setWorkspaceVersion((version) => version + 1);
+    setVersion((value) => value + 1);
+    navigation.reset();
   }
-
-  const files: ProjectActions = {
-    async import(files) {
-      const version = documentVersion.current;
-      try {
-        const datasets = await readDatasets(files);
-        if (version !== documentVersion.current) {
-          setNotice("Import cancelled because a different workspace was opened.");
-          return;
-        }
-        setProject(appendDatasets(latestProject.current, datasets));
-        setNotice(
-          `Imported ${datasets.length} dataset${datasets.length === 1 ? "" : "s"}. Drag a dataset onto the canvas or choose Place source.`,
-        );
-      } catch (error) {
-        setNotice(`Import failed: ${(error as Error).message}`);
-      }
-    },
-    async open(file) {
-      try {
-        load(await readProject(file));
-        setNotice(`Opened ${file.name}.`);
-      } catch (error) {
-        setNotice(`Could not open project: ${(error as Error).message}`);
-      }
-    },
-    save() {
-      try {
-        saveProject(project);
-        setNotice("Project and datasets saved in this browser.");
-      } catch (error) {
-        setNotice(
-          `Save failed: ${(error as Error).message} Use Download project for larger workspaces.`,
-        );
-      }
-    },
-    download() {
-      try {
-        downloadProject(project);
-      } catch (error) {
-        setNotice(`Could not export project: ${(error as Error).message}`);
-      }
-    },
-  };
+  function place(draft: ModuleDraft) {
+    navigate({ page: "canvas" });
+    setPlacement({ ...draft });
+  }
+  function configure(id: string) {
+    cancelEditing();
+    setSelected(id);
+    setFocusRequest({ id });
+    navigate({ page: "canvas" });
+  }
+  const { files, importing } = useProjectDocuments({
+    history,
+    version,
+    load,
+    imported: (id) => navigate({ page: "data", id }),
+    notify: setNotice,
+  });
 
   return (
-    <div className="workbench-shell">
-      <header className="workbench-header">
-        <a href="/" className="brand">
-          <span className="brand-mark">≋</span>Streamweave <span className="version">0.2</span>
-        </a>
-        <span className="header-purpose">Visual numerical workbench</span>
-        <a
-          className="repo-link"
-          href="https://gitlab.com/Deamenophobia/streamweave"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Repository ↗
-        </a>
-        <span className="local-badge">
-          <i /> Local computation
-        </span>
-      </header>
-      <main className="workbench-main">
-        <CanvasWorkspace
-          key={workspaceVersion}
-          history={history}
-          execution={execution}
-          selected={selected}
-          select={select}
-          inspect={setInspection}
-          load={load}
-          run={execution.rerun}
-          files={files}
-          notify={setNotice}
-        />
-        {notice && (
-          <div className="notice" role="alert">
-            {notice}
-            <button aria-label="Dismiss notification" onClick={() => setNotice("")}>
-              ×
-            </button>
-          </div>
+    <div className="workspace-shell">
+      <WorkspaceHeader
+        name={project.graph.name}
+        rename={(name) =>
+          setProject((previous) => ({ ...previous, graph: { ...previous.graph, name } }))
+        }
+        files={files}
+        load={load}
+        undo={() => {
+          cancelEditing();
+          history.undo();
+        }}
+        redo={() => {
+          cancelEditing();
+          history.redo();
+        }}
+        canUndo={history.canUndo}
+        canRedo={history.canRedo}
+        busy={execution.busy}
+        run={execution.rerun}
+      />
+      <WorkspaceSidebar
+        route={route}
+        project={project}
+        execution={execution}
+        navigate={navigate}
+        place={place}
+      />
+      <main className="workspace-content">
+        <div className="canvas-view" hidden={route.page !== "canvas"}>
+          {(canvasVisited || route.page === "canvas") && (
+            <CanvasWorkspace
+              key={version}
+              history={history}
+              execution={execution}
+              selected={selected}
+              select={setSelected}
+              inspect={(id) => navigate({ page: "results", id })}
+              active={route.page === "canvas"}
+              requested={placement}
+              cancelVersion={cancelVersion}
+              focusRequest={focusRequest}
+              notify={setNotice}
+            />
+          )}
+        </div>
+        {route.page === "data" && (
+          <DatasetsView
+            datasets={project.datasets}
+            id={route.id}
+            importFiles={files.import}
+            importing={importing}
+            useSource={(dataset) => place(sourceDraft(dataset))}
+          />
         )}
-        <ResultsPanel
-          project={project}
-          execution={execution}
-          selected={selected}
-          inspection={inspection}
-          onInspect={setInspection}
-          onSelect={select}
-        />
-        <footer className="main-foot">
-          Streamweave / numerical workbench{" "}
-          <span>Time alignment is explicit. Synthetic examples demonstrate mechanics.</span>
-        </footer>
+        {route.page === "results" && (
+          <ResultsView
+            project={project}
+            execution={execution}
+            id={route.id}
+            configure={configure}
+          />
+        )}
       </main>
+      <WorkspaceStatus project={project} execution={execution} review={configure} />
+      {notice && (
+        <div className="workspace-notice" role="status">
+          <span>{notice}</span>
+          <button aria-label="Dismiss notification" onClick={() => setNotice("")}>
+            ×
+          </button>
+        </div>
+      )}
     </div>
   );
 }

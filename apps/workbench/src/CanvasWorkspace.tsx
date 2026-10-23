@@ -1,37 +1,37 @@
-import { useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   Background,
   BackgroundVariant,
   Controls,
   ReactFlow,
   ReactFlowProvider,
+  useReactFlow,
 } from "@xyflow/react";
-import { WORKBENCH_MODULES, type WorkbenchProject } from "@streamweave/core";
-import { CanvasTools, DatasetDrawer, NodeInspectorPanel, ProjectToolbar } from "./CanvasPanels";
-import type { ProjectActions } from "./projectFiles";
-import { moduleIcons, removeNodes, sourceDraft } from "./editorModel";
+import { WORKBENCH_MODULES } from "@streamweave/core";
+import { NodeInspectorPanel } from "./NodeInspectorPanel";
+import { moduleIcons, removeNodes, type ModuleDraft } from "./editorModel";
 import { nodeTypes, type VisualNode } from "./ModuleNode";
 import { NodePicker } from "./NodePicker";
 import { useCanvasInsertion, type CanvasInsertion } from "./useCanvasInsertion";
 import { useGraphEditing } from "./useGraphEditing";
 import { type Execution } from "./useGraphRun";
 import { type ProjectHistory } from "./useProjectHistory";
-import { type Inspection } from "./ResultsPanel";
 
 type Props = {
   history: ProjectHistory;
   execution: Execution;
   selected: string | null;
   select: (id: string | null) => void;
-  inspect: (inspection: Inspection) => void;
-  load: (project: WorkbenchProject) => void;
-  run: () => void;
-  files: ProjectActions;
+  inspect: (id: string) => void;
+  active: boolean;
+  requested?: ModuleDraft;
+  focusRequest?: { id: string };
+  cancelVersion: number;
   notify: (message: string) => void;
 };
 
 const fitViewOptions = {
-  padding: { top: "80px", bottom: "44px", left: "50px", right: "50px" },
+  padding: { top: "45px", bottom: "45px", left: "40px", right: "40px" },
 } as const;
 
 function PlacementOverlay({ insertion }: { insertion: CanvasInsertion }) {
@@ -74,14 +74,26 @@ function Workspace({
   selected,
   select,
   inspect,
-  load,
-  run,
-  files,
+  active,
+  requested,
+  focusRequest,
+  cancelVersion,
   notify,
 }: Props) {
   const { project } = history;
   const { graph, datasets } = project;
-  const [dataOpen, setDataOpen] = useState(false);
+  const { setCenter, getZoom } = useReactFlow();
+  const focusedRequest = useRef<{ id: string } | undefined>(undefined);
+  useEffect(() => {
+    if (!active || !focusRequest || focusedRequest.current === focusRequest) return;
+    const node = graph.nodes.find((node) => node.id === focusRequest.id);
+    if (!node) return;
+    focusedRequest.current = focusRequest;
+    void setCenter(node.position.x + 92, node.position.y + 67, {
+      zoom: Math.max(0.85, getZoom()),
+      duration: 180,
+    });
+  }, [active, focusRequest, graph.nodes, setCenter, getZoom]);
   const editor = useGraphEditing(history, execution, selected, notify);
   const insertion = useCanvasInsertion({
     project,
@@ -90,30 +102,35 @@ function Workspace({
     notify,
     undo: history.undo,
     redo: history.redo,
+    active,
+    requested,
+    cancelVersion,
   });
   const { canvas, picker, placement } = insertion;
   const selectedNode = graph.nodes.find((node) => node.id === selected);
-  const failures = Object.values(execution.run?.nodes ?? {}).filter(
-    (result) => result.state !== "ready",
-  ).length;
   const connectionSource = graph.nodes.find((node) => node.id === picker?.from?.source);
-  let status = `${failures ? "!" : "✓"} ${graph.nodes.length} modules · ${graph.edges.length} connections · ${failures ? `${failures} need attention` : "all branches ready"}`;
-  if (execution.error) status = execution.error;
-  if (execution.busy) status = "◌ Computing graph…";
 
   return (
     <section className="canvas-section" aria-label="Calculation canvas">
-      <ProjectToolbar
-        name={graph.name}
-        rename={(name) => editor.updateGraph((graph) => ({ ...graph, name }))}
-        undo={insertion.undo}
-        redo={insertion.redo}
-        canUndo={history.canUndo}
-        canRedo={history.canRedo}
-        busy={execution.busy}
-        run={run}
-        files={files}
-      />
+      <header className="canvas-heading">
+        <div>
+          <h1>Canvas</h1>
+          <span>
+            {graph.nodes.length} modules · {graph.edges.length} connections
+          </span>
+        </div>
+        <div className="toolbar">
+          <button disabled={!history.canUndo} onClick={insertion.undo} title="Undo (Ctrl+Z)">
+            ↶ Undo
+          </button>
+          <button disabled={!history.canRedo} onClick={insertion.redo} title="Redo (Ctrl+Shift+Z)">
+            ↷ Redo
+          </button>
+          <button className="secondary-action" onClick={() => insertion.showPicker()}>
+            ＋ Add module
+          </button>
+        </div>
+      </header>
       <div
         ref={canvas}
         className={`workbench-canvas ${placement ? "is-placing" : ""}`}
@@ -162,35 +179,10 @@ function Workspace({
           <Background variant={BackgroundVariant.Dots} color="#34413e" gap={22} size={1} />
           <Controls showInteractive={false} fitViewOptions={fitViewOptions} />
         </ReactFlow>
-        <CanvasTools
-          dataOpen={dataOpen}
-          datasetCount={datasets.length}
-          add={() => {
-            setDataOpen(false);
-            insertion.showPicker();
-          }}
-          toggleData={() => {
-            setDataOpen((open) => !open);
-            insertion.cancel();
-          }}
-          load={load}
-        />
-        {dataOpen && (
-          <DatasetDrawer
-            datasets={datasets}
-            inspect={(id) => inspect({ kind: "dataset", id })}
-            place={(dataset) => {
-              setDataOpen(false);
-              insertion.beginPlacement(sourceDraft(dataset));
-            }}
-            close={() => setDataOpen(false)}
-            importFiles={files.import}
-          />
-        )}
         {!graph.nodes.length && !picker && !placement && (
           <div className="canvas-empty">
             <strong>A canvas for your calculations.</strong>
-            <p>Right-click to add a module, or open Data to import a source.</p>
+            <p>Drag a module from the library, or open Datasets to import a source.</p>
             <button onClick={() => insertion.showPicker()}>＋ Add your first module</button>
           </div>
         )}
@@ -218,7 +210,7 @@ function Workspace({
               select(null);
             }}
             close={() => select(null)}
-            inspect={() => inspect({ kind: "node", id: selectedNode.id })}
+            inspect={() => inspect(selectedNode.id)}
           />
         )}
         <PlacementOverlay insertion={insertion} />
@@ -235,13 +227,6 @@ function Workspace({
             choose={insertion.choose}
           />
         )}
-      </div>
-      <div
-        className={`pipeline-status ${execution.error || failures ? "invalid" : ""}`}
-        role="status"
-      >
-        <span>{status}</span>
-        <span>{datasets.length} DATA SOURCES</span>
       </div>
     </section>
   );
