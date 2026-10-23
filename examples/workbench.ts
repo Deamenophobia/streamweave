@@ -12,6 +12,6 @@ console.log("All four outputs are ready. This is a descriptive fit of synthetic 
 
 if (process.argv.includes("--write-samples")) {
   for (const [i, dataset] of project.datasets.entries()) {
-    writeFileSync(new URL(`./sensor-${i === 0 ? "a" : "b"}.csv`, import.meta.url), toCsv(dataset.rows) + "\n");
+    writeFileSync(new URL(`./sensor-${i === 0 ? "a" : "b"}.csv`, import.meta.url), toCsv(dataset.rows));
   }
 }
