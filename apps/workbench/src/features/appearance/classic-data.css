@@ -1,0 +1,81 @@
+/* Plain tables, crisp rules, and readable charts. */
+:root[data-theme="classic"] .view-heading h1 {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
+:root[data-theme="classic"] .dataset-summary {
+  background: #f5f6f5;
+  box-shadow: none;
+}
+:root[data-theme="classic"]
+  :is(.dataset-summary strong, .plot-heading strong, .point-readout strong) {
+  color: var(--retro-ink);
+}
+:root[data-theme="classic"] :is(.document-toolbar, .display-switch) {
+  border-color: var(--retro-border);
+}
+:root[data-theme="classic"] :is(.view-tabs button, .display-switch button) {
+  color: var(--muted);
+}
+:root[data-theme="classic"] .view-tabs button[aria-selected="true"] {
+  color: var(--retro-link);
+  font-weight: 600;
+}
+:root[data-theme="classic"] .display-switch button[aria-pressed="true"] {
+  background: var(--retro-selected);
+  color: var(--retro-link);
+}
+:root[data-theme="classic"] :is(.dataset-preview, .result-document) {
+  background: #fff;
+}
+:root[data-theme="classic"] .data-view table {
+  font-size: 11px;
+}
+:root[data-theme="classic"] .data-view th {
+  background: #e9ecee;
+  color: #303941;
+  font-weight: 600;
+}
+:root[data-theme="classic"] :is(.data-view th, .data-view td) {
+  border-bottom-color: #dce0e3;
+}
+:root[data-theme="classic"] .data-view td {
+  color: #303941;
+}
+:root[data-theme="classic"] .data-view tbody tr:nth-child(even) {
+  background: #f7f8f8;
+}
+:root[data-theme="classic"] .data-view tbody tr:hover {
+  background: var(--retro-hover);
+}
+:root[data-theme="classic"] .null-cell {
+  color: var(--retro-warning);
+}
+:root[data-theme="classic"] .pagination button:hover:not(:disabled) {
+  background: var(--retro-hover);
+}
+:root[data-theme="classic"] .empty-state {
+  background: #f4f5f5;
+  color: var(--muted);
+}
+:root[data-theme="classic"] .series-plot svg text {
+  fill: #59656e;
+}
+:root[data-theme="classic"] .grid-line {
+  stroke: #d5dbdf;
+}
+:root[data-theme="classic"] .cursor-line {
+  stroke: #748796;
+}
+:root[data-theme="classic"] .quality {
+  color: var(--retro-success);
+  border-color: #a9c1af;
+  background: #f3f8f4;
+}
+:root[data-theme="classic"]
+  :is(.quality.missing, .quality.undefined, .quality.stale, .quality.warming) {
+  color: var(--retro-warning);
+  border-color: #cdbd9e;
+  background: #fff8ec;
+}

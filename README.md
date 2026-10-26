@@ -8,6 +8,8 @@ Import independent sources, align their timestamps, and connect calculations on 
 
 ![Streamweave numerical workbench](docs/workbench.png)
 
+**Classic · Retro** is the default appearance. Select **Studio · Original** in the top-bar **Appearance** control to use the original dark interface. The choice is remembered in your browser. See [Appearance](docs/wiki/appearance.md).
+
 ## Run locally
 
 Requires Node.js 22.12 or newer and npm.
@@ -20,7 +22,7 @@ npm run dev
 Open **http://127.0.0.1:5187**. The initial study connects two synthetic sensor datasets sampled at different intervals. An alignment module feeds rolling correlation, descriptive linear regression, and an export. Regression has separate coefficient and residual ports.
 
 ```sh
-npm run check          # formatting, docs, boundaries, types, 50 behavioral/numerical tests, builds
+npm run check          # formatting, docs, boundaries, types, behavioral/numerical tests, builds
 npm run demo           # execute the multi-source study without the browser
 npm run demo:pressure  # retained signed-event replay example
 ```

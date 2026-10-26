@@ -30,4 +30,6 @@ The current release is **v0.2**. Calculations run locally in a browser worker. N
 
 The persistent sidebar switches between Canvas, Datasets, and Results. File, Edit, and Examples stay available in the top menu. Only the selected workspace view is shown, and returning to Canvas preserves its position.
 
+**Classic · Retro** is the default light appearance. The original dark **Studio** appearance remains available from the top bar. See [Appearance](appearance.md) for switching, persistence, and implementation ownership.
+
 Documentation sources live alongside the code in the private [repository](https://gitlab.com/Deamenophobia/streamweave). The wiki is published from those sources; update the repository first so changes remain reviewable and versioned.

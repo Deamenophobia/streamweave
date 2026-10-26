@@ -7,6 +7,7 @@ import {
 } from "@streamweave/core";
 import type { ProjectActions } from "./documents/contracts";
 import { projectFileAccept } from "./adapters/projectJson";
+import { AppearanceSelect } from "./features/appearance/AppearanceSelect";
 
 function Menu({ label, children }: { label: string; children: ReactNode }) {
   const ref = useRef<HTMLDetailsElement>(null);
@@ -102,6 +103,7 @@ export function WorkspaceHeader({
         value={name}
         onChange={(event) => rename(event.target.value)}
       />
+      <AppearanceSelect />
       <button className="run-button" onClick={run} disabled={busy}>
         {busy ? "Computing…" : "↻ Run"}
       </button>

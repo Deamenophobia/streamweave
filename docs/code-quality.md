@@ -1,4 +1,4 @@
-# Code quality review — updated 2026-10-26
+# Code quality review — updated 2026-10-27
 
 ## Assessment
 
@@ -19,7 +19,7 @@ TypeScript additionally enforces unused-local, unused-parameter, and implicit-re
 
 ## Verification
 
-The resulting suite contains **57 tests**: 20 legacy accumulator/replay/pipeline tests, 15 general workbench tests, seven editor/import tests, three project-opening race tests, three module-contract tests, two parameter-option tests, four file-format tests, and three calculation-identity tests. `npm run check` runs formatting, documentation-link validation, source boundary/cycle checks, type checking, tests, and production builds. Both terminal examples were exercised during the original review.
+The resulting suite contains **60 tests**: 20 legacy accumulator/replay/pipeline tests, 15 general workbench tests, seven editor/import tests, three project-opening race tests, three module-contract tests, two parameter-option tests, four file-format tests, three calculation-identity tests, and three appearance-preference tests. `npm run check` runs formatting, documentation-link validation, source boundary/cycle checks, type checking, tests, and production builds. Both terminal examples were exercised during the original review.
 
 `npm audit` reported **zero known vulnerabilities** for the installed lockfile on 2026-10-24. This is time-sensitive and does not cover application logic or unknown vulnerabilities. React Flow still produces its known non-fatal `use client` bundler warning in this client application.
 
@@ -40,6 +40,10 @@ The former `projectFiles.ts` combined codecs, browser I/O, local storage, ID gen
 Project naming no longer invalidates calculations. Node titles remain dependencies because current output labels and error diagnostics use them. Native v2 project structure is unchanged. A shared core validator now checks in-memory projects before JSON serialization, preventing non-finite source values from being silently written as null. File adapters use UTF-8 byte limits.
 
 Seven added tests cover portable projects and matching serialized results for both examples, invalid values/versions, dataset reader equivalence, and calculation dependencies. A production-build browser check covered dataset preview/schema, CSV export/import, project download/open, browser save/reload, and ready results without browser warning/error logs. See [extension ownership](wiki/extension-guide.md), [file formats](wiki/file-formats.md), and the [validation record](validation.md).
+
+## Appearance boundaries — 2026-10-27
+
+Classic and Studio share one component tree. The appearance feature owns its catalogue, selector, provider, and scoped CSS; the platform layer owns browser persistence and document attributes. Theme changes do not enter document history or calculation state. Three focused tests cover defaults, invalid saved values, preference persistence separate from project storage, and blocked/quota-limited storage. Production-build browser checks cover both appearances, reload persistence, graph/viewport preservation, and narrow layouts. This is manual visual acceptance, not a complete accessibility or cross-browser audit.
 
 ## Remaining gaps
 

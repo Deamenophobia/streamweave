@@ -10,6 +10,7 @@
   --muted: #91a29b;
   --line: #2a3834;
   --panel: #151e20;
+  --canvas-grid: #34413e;
 }
 * {
   box-sizing: border-box;

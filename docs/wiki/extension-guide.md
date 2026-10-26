@@ -20,6 +20,8 @@ Paths below are relative to the repository root. These are implemented boundarie
 
 The dataset feature demonstrates the last convention: its view composes import controls, summary, preview, and column schema. Existing canvas and result components remain at the application source root; this change does not move unrelated files solely for symmetry. Shared `DataView.tsx` renders data for both dataset and result views.
 
+Appearance is another focused feature: `features/appearance/` owns the catalogue, provider, selector, and scoped theme styles; `platform/appearanceStorage.ts` owns browser preference storage and document appearance changes. Both themes share the existing views. A theme must not introduce its own document state, calculation path, or workspace component tree. See [Appearance](appearance.md).
+
 ## Dependency direction
 
 The core imports only core code. The app uses its public `@streamweave/core` exports. Adapters can use the core and sibling adapters; they cannot depend on platform code, document orchestration, execution, or views. Platform code can use adapters. Documents can use platform/adapters. Execution owns its worker and request contract and cannot depend on views or document services.

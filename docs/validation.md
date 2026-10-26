@@ -4,7 +4,7 @@ Validation covers the local implementation and reproducibility. It makes no clai
 
 ## Automated checks — v0.2
 
-`npm run check` passes formatting, documentation-link validation, source boundary/cycle checks, TypeScript checks, all **57 tests**, and both production builds. The examples were exercised in the original review: `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the quality review on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
+`npm run check` passes formatting, documentation-link validation, source boundary/cycle checks, TypeScript checks, all **60 tests**, and both production builds. The examples were exercised in the original review: `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the quality review on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
 
 The 15 workbench tests cover:
 
@@ -24,6 +24,15 @@ Seven editor tests cover immutable connected insertion, compatible module search
 Three project-opening tests use controlled asynchronous completions to verify that late reads cannot replace a newer workspace, newer open requests win, and stale failures do not surface in another document. See [the code-quality review](code-quality.md) for scope and remaining gaps.
 
 Three module-contract tests cover an independently defined evaluator, invalid input/output rejection, non-finite outputs, schema defaults, and dependent numeric bounds. Two parameter-option tests verify resolution of the declared dataset/input port and graceful behavior when inputs are absent.
+
+## Appearance acceptance — 2026-10-27
+
+- Classic was selected on first load without a saved preference. Switching to Studio preserved nine modules, eight wires, and the exact canvas viewport transform. Reload retained Studio. Switching appearance did not add an undo entry.
+- Canvas, Datasets, and Results were visually checked in both appearances against a production preview on port 5188. The correlation result remained 116/121 valid with a final value of 0.997488.
+- Classic's module picker and parameter inspector were checked. An invalid alignment grid interval produced readable error states; Undo restored ready branches.
+- Layouts were checked at 1280 × 720, 800 × 800, and 480 × 800. The compact header wraps at the narrowest size, keeping menus, appearance, and Run available. Viewport overrides were reset afterward.
+- Three automated tests cover default/unknown preferences, persistence independent of project storage, and blocked storage/read or quota/write failures. Save failure leaves the chosen appearance active for the session and exposes a status message in the selector.
+- `workbench.png`, `datasets.png`, and `results.png` show Classic; `studio.png` shows the retained original canvas. These are spot checks, not a complete accessibility or cross-browser audit.
 
 ## Extension/file boundaries acceptance — 2026-10-26
 

@@ -17,6 +17,8 @@ import { useCanvasInsertion, type CanvasInsertion } from "./useCanvasInsertion";
 import { useGraphEditing } from "./useGraphEditing";
 import { type Execution } from "./execution/contracts";
 import { type ProjectHistory } from "./documents/useProjectHistory";
+import { useAppearance } from "./features/appearance/AppearanceProvider";
+import { themes } from "./features/appearance/themes";
 
 type Props = {
   history: ProjectHistory;
@@ -81,6 +83,7 @@ function Workspace({
   cancelVersion,
   notify,
 }: Props) {
+  const { theme } = useAppearance();
   const { project } = history;
   const { graph, datasets } = project;
   const { setCenter, getZoom } = useReactFlow();
@@ -174,10 +177,15 @@ function Workspace({
           fitViewOptions={fitViewOptions}
           minZoom={0.2}
           maxZoom={1.6}
-          colorMode="dark"
+          colorMode={themes[theme].colorMode}
           deleteKeyCode={picker || placement ? null : ["Backspace", "Delete"]}
         >
-          <Background variant={BackgroundVariant.Dots} color="#34413e" gap={22} size={1} />
+          <Background
+            variant={BackgroundVariant.Dots}
+            color="var(--canvas-grid)"
+            gap={22}
+            size={1}
+          />
           <Controls showInteractive={false} fitViewOptions={fitViewOptions} />
         </ReactFlow>
         {!graph.nodes.length && !picker && !placement && (

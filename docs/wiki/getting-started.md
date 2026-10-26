@@ -13,6 +13,8 @@ npm run dev
 
 Open **http://127.0.0.1:5187**. A saved browser project opens if present; otherwise the two-source example opens. Use **Examples → Two-source study** to load that example explicitly. Examples replace the in-memory document, so download any work you want to retain first.
 
+The default appearance is **Classic · Retro**. Choose **Studio · Original** from the top-bar **Appearance** selector for the original dark interface. Your choice is remembered separately from project files. See [Appearance](appearance.md).
+
 For a production build and local preview:
 
 ```sh

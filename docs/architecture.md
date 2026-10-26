@@ -64,6 +64,8 @@ There is no runtime discovery/container framework: registration is a small compo
 
 The application composes explicit interfaces; project state does not contain browser controls or canvas measurements.
 
+Appearance is composed above the app by `features/appearance/AppearanceProvider.tsx`. Its catalogue and styles own Classic and Studio; `platform/appearanceStorage.ts` isolates the browser preference and document attributes. Both themes render the same workspace components. Appearance is not a document field, undo operation, or calculation dependency. See [Appearance](wiki/appearance.md).
+
 | Module                                                                 | Owns                                                                                    |
 | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | `App.tsx`                                                              | Project lifecycle, notices, selection, and composition of focused views                 |

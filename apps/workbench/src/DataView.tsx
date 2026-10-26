@@ -110,7 +110,7 @@ function SeriesChart({ series }: { series: Series }) {
                 cx={plot.x(point.timestampMs)}
                 cy={plot.y(point.value)}
                 r="3.5"
-                fill="#a5ecc8"
+                fill="var(--accent)"
               />
             )}
           </>

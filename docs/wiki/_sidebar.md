@@ -2,6 +2,7 @@
 
 - [Home](home.md)
 - [Getting started](getting-started.md)
+- [Appearance](appearance.md)
 - [Canvas guide](canvas-guide.md)
 - [Data and time](data-and-time.md)
 - [Module reference](module-reference.md)

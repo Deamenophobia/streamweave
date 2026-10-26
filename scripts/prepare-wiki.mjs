@@ -18,6 +18,7 @@ for (const [name, target] of Object.entries({
   "validation.md": "validation.md",
   "code-quality.md": "code-quality.md",
   "workbench.png": "assets/workbench.png",
+  "studio.png": "assets/studio.png",
   "datasets.png": "assets/datasets.png",
   "results.png": "assets/results.png",
 }))

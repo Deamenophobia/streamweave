@@ -1,0 +1,168 @@
+@import "./classic-shell.css";
+@import "./classic-canvas.css";
+@import "./classic-data.css";
+
+/* Classic is a presentation layer over the same workbench, never a second UI. */
+:root[data-theme="classic"] {
+  color-scheme: light;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #252a30;
+  background: #fff;
+  --accent: #246394;
+  --muted: #606a73;
+  --line: #d1d5d8;
+  --panel: #f3f4f5;
+  --canvas-grid: #d8dcdf;
+  --retro-ink: #252a30;
+  --retro-link: #195d91;
+  --retro-hover: #eaf0f5;
+  --retro-selected: #dfeaf3;
+  --retro-border: #aab1b8;
+  --retro-success: #287243;
+  --retro-warning: #80581a;
+  --retro-danger: #a43b32;
+}
+
+:root[data-theme="classic"]
+  :is(
+    button,
+    input,
+    select,
+    .app-menu summary,
+    .app-menu-items,
+    .brand-mark,
+    .flow-module,
+    .canvas-inspector,
+    .node-picker,
+    .picker-icon,
+    .dataset-summary,
+    .display-switch,
+    .quality,
+    .empty-state,
+    .workspace-notice,
+    .placement-banner,
+    .placement-ghost
+  ) {
+  border-radius: 2px;
+}
+
+:root[data-theme="classic"]
+  :is(
+    .tiny-label,
+    .section-caption,
+    .section-caption > span,
+    .sidebar-hint,
+    .sidebar-section-title,
+    .palette-detail p,
+    .sidebar-source small,
+    .result-link small,
+    .sidebar-repository,
+    .sidebar-repository span,
+    .canvas-heading span,
+    .canvas-hint,
+    .view-heading p,
+    .view-empty p,
+    .result-downloads span,
+    .field,
+    .field-help,
+    .inspector-description,
+    .port-contract p,
+    .connection-list > div,
+    .picker-context,
+    .picker-label small,
+    .picker-category,
+    .picker-footer,
+    .picker-empty,
+    .result-note,
+    .dataset-summary > div > span,
+    .dataset-summary small,
+    .dataset-summary .time-extent strong,
+    .plot-heading span,
+    .point-readout,
+    .column-legend,
+    .column-legend small,
+    .pagination
+  ) {
+  color: var(--muted);
+}
+
+:root[data-theme="classic"]
+  :is(
+    .text-button,
+    .source-place,
+    .result-downloads button,
+    .pagination button,
+    .palette-detail > div > button,
+    .connection-list > div > button,
+    .picker-heading button
+  ) {
+  color: var(--retro-link);
+}
+
+:root[data-theme="classic"] :is(.text-button, .source-place, .result-downloads button):hover {
+  text-decoration: underline;
+  color: #10466f;
+}
+
+:root[data-theme="classic"]
+  :is(
+    .primary-action,
+    .secondary-action,
+    .sidebar-action,
+    .canvas-empty button,
+    .inspector-actions button,
+    .run-button
+  ) {
+  border: 1px solid var(--retro-border);
+  background: linear-gradient(#fff, #e9ebed);
+  color: var(--retro-ink);
+  box-shadow: inset 0 1px #fff;
+}
+
+:root[data-theme="classic"]
+  :is(
+    .primary-action,
+    .secondary-action,
+    .sidebar-action,
+    .canvas-empty button,
+    .inspector-actions button,
+    .run-button
+  ):hover:not(:disabled) {
+  background: #e2e8ed;
+  border-color: #7f8e9a;
+}
+
+:root[data-theme="classic"] button.primary-action {
+  background: #246394;
+  border-color: #1b507a;
+  color: #fff;
+}
+
+:root[data-theme="classic"] button.primary-action:hover:not(:disabled) {
+  background: #194f79;
+}
+
+:root[data-theme="classic"] :is(.sidebar-search, .field input, .field select, .module-search) {
+  background: #fff;
+  color: var(--retro-ink);
+  border-color: var(--retro-border);
+}
+
+:root[data-theme="classic"] input::placeholder {
+  color: #68717a;
+  opacity: 1;
+}
+
+:root[data-theme="classic"] .module-search:focus {
+  outline-color: var(--accent);
+}
+
+:root[data-theme="classic"] :is(.module-error, .node-inspector .module-error) {
+  background: #fff1ee;
+  color: var(--retro-danger);
+  border-color: #d6aaa4;
+}
+
+:root[data-theme="classic"] .inspector-actions .danger-text {
+  color: var(--retro-danger);
+}
