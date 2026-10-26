@@ -1,5 +1,5 @@
 import type { WorkbenchProject } from "@streamweave/core";
-import { readProject } from "./projectFiles";
+import { readProject } from "../platform/browserFiles";
 
 /** Only the latest open request may replace the document it started from. */
 export function createProjectOpener(

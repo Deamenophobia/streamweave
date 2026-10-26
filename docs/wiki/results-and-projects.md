@@ -12,6 +12,8 @@ Tables paginate through every row in groups of 25. Charts show units, valid coun
 
 ## Choose a save or export format
 
+For the design rationale and future Excel/YAML options, see [File formats and archiving](file-formats.md). JSON remains the implemented native workspace format.
+
 | Action                  | Contains                                                                          | Restore/edit later?                                                                          |
 | ----------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | File → Save in browser  | Current graph and embedded datasets in this browser's local storage               | Reloads in the same browser profile and origin                                               |

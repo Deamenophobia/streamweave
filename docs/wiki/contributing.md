@@ -2,6 +2,8 @@
 
 Read [AGENTS.md](../../AGENTS.md) before making changes. Keep mathematical code independent of React, browser APIs, network clients, storage, and wall-clock reads. Keep file I/O, edit history, worker execution, and presentation separate. Prefer named operations and early returns to deeply nested conditional logic.
 
+Use [Extension ownership](extension-guide.md) to choose the implementation location before adding a feature or adapter. See [File formats and archiving](file-formats.md) before changing save/import behavior.
+
 ## Local verification
 
 ```sh

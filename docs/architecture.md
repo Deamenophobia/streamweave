@@ -64,30 +64,31 @@ There is no runtime discovery/container framework: registration is a small compo
 
 The application composes explicit interfaces; project state does not contain browser controls or canvas measurements.
 
-| Module                                                                 | Owns                                                                        |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `App.tsx`                                                              | Project lifecycle, notices, selection, and composition of focused views     |
-| `WorkspaceHeader.tsx` / `WorkspaceSidebar.tsx` / `WorkspaceStatus.tsx` | Project menus, contextual navigation/library, execution status              |
-| `workspaceNavigation.ts` / `useWorkspaceNavigation.ts`                 | Hash routes, browser history, remembered dataset/result selection           |
-| `useProjectDocuments.ts`                                               | Import/open/save orchestration, document-version guards, import state       |
-| `projectFiles.ts`                                                      | File parsing, bounded imports, browser persistence, portable downloads      |
-| `projectHistory.ts` / `useProjectHistory.ts`                           | Immutable history, 50-entry bounds, undo/redo and drag checkpoints          |
-| `useGraphRun.ts`                                                       | Worker lifecycle, calculation dependencies, cancellation, errors            |
-| `editorModel.ts`                                                       | Pure insert/delete operations, compatible ports, source binding             |
-| `useGraphEditing.ts`                                                   | React Flow changes, transient measurements/edge selection, parameter edits  |
-| `useCanvasInsertion.ts`                                                | Pointer coordinates, search, placement, wire continuation, keyboard actions |
-| `CanvasWorkspace.tsx` / `NodeInspectorPanel.tsx`                       | Canvas composition, editor controls, selected module configuration          |
-| `ModuleNode.tsx` / `NodePicker.tsx` / `Inspector.tsx`                  | Node display, searchable module choice, inspector composition               |
-| `ParameterFields.tsx` / `parameterOptions.ts`                          | Shared parameter widgets and declared dataset/input column resolution       |
-| `modulePresentation.ts`                                                | UI icons and concise module details; separate from edit operations          |
-| `DatasetsView.tsx`                                                     | Selected source preview/schema, import, source-placement request, CSV       |
-| `ResultsView.tsx` / `DataView.tsx`                                     | One selected module/port, charts, tables, download controls                 |
+| Module                                                                 | Owns                                                                                    |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `App.tsx`                                                              | Project lifecycle, notices, selection, and composition of focused views                 |
+| `WorkspaceHeader.tsx` / `WorkspaceSidebar.tsx` / `WorkspaceStatus.tsx` | Project menus, contextual navigation/library, execution status                          |
+| `workspaceNavigation.ts` / `useWorkspaceNavigation.ts`                 | Hash routes, browser history, remembered dataset/result selection                       |
+| `documents/useProjectDocuments.ts`                                     | Import/open/save orchestration, document-version guards, import state                   |
+| `adapters/`                                                            | Dataset readers, project JSON codec, CSV/result JSON encoders; no UI or browser effects |
+| `platform/`                                                            | Bounded file access, download delivery, browser storage and ID creation                 |
+| `documents/projectHistory.ts` / `documents/useProjectHistory.ts`       | Immutable history, 50-entry bounds, undo/redo and drag checkpoints                      |
+| `execution/useGraphRun.ts`                                             | Worker lifecycle, calculation dependencies, cancellation, errors                        |
+| `editorModel.ts`                                                       | Pure insert/delete operations, compatible ports, source binding                         |
+| `useGraphEditing.ts`                                                   | React Flow changes, transient measurements/edge selection, parameter edits              |
+| `useCanvasInsertion.ts`                                                | Pointer coordinates, search, placement, wire continuation, keyboard actions             |
+| `CanvasWorkspace.tsx` / `NodeInspectorPanel.tsx`                       | Canvas composition, editor controls, selected module configuration                      |
+| `ModuleNode.tsx` / `NodePicker.tsx` / `Inspector.tsx`                  | Node display, searchable module choice, inspector composition                           |
+| `ParameterFields.tsx` / `parameterOptions.ts`                          | Shared parameter widgets and declared dataset/input column resolution                   |
+| `modulePresentation.ts`                                                | UI icons and concise module details; separate from edit operations                      |
+| `features/datasets/`                                                   | Selected source preview/schema, import, source-placement request, CSV                   |
+| `ResultsView.tsx` / `DataView.tsx`                                     | One selected module/port, charts, tables, download controls                             |
 
 Import and insertion are distinct actions. A dataset click previews data; creation requires a drag or explicit placement. Graph changes use immutable operations and do not perform I/O inside React state updaters. Connected insertion and selection deletion each commit one history entry. Measured node bounds are retained separately so recomputation cannot erase visible wires. Core tests validate numerical behavior; editor tests validate edit transactions and import boundaries. Formatting is enforced by `npm run check` and CI.
 
 The workspace has three routes: `#/canvas`, `#/data/<dataset-id>`, and `#/results/<module-id>`. Only the active view is visible. Project/history and worker ownership remain above navigation. The canvas mounts on its first visit so React Flow can measure a visible container, then stays mounted while hidden to retain its viewport and selection. Dataset and result views render their selected document only. Navigation does not edit or rerun the graph; a missing referenced ID displays an unavailable state.
 
-`projectOpening.ts` owns asynchronous project-read ordering: only the latest request from the current document version can replace the project. `useProjectDocuments.ts` bridges that coordinator to React state and notices. Import bounds are checked before reading too many files and during row accumulation, then checked again against the existing workspace when appended.
+`documents/projectOpening.ts` owns asynchronous project-read ordering: only the latest request from the current document version can replace the project. `documents/useProjectDocuments.ts` bridges that coordinator to React state and notices. Import bounds are checked before reading too many files and during row accumulation, then checked again against the existing workspace when appended.
 
 ## Reuse after reviewing earlier assets
 
@@ -106,6 +107,10 @@ The owner's earlier analytical lab was examined for data adapters, factor factor
 Some legacy routines and domain-specific services were simplified or tightly coupled. They were not copied as general-purpose scientific implementations. GPU rendering, service orchestration, identity/billing, external execution, and unvalidated predictive ensembles are outside this release. Private inventory notes record source paths and revisions locally.
 
 ## Extension boundary
+
+The [extension ownership guide](wiki/extension-guide.md) maps calculation modules, file adapters, platform effects, document workflows, worker execution, and feature views to their implementation directories. CI checks the allowed import directions for the new layers. [File formats and archiving](wiki/file-formats.md) distinguishes native project persistence from table/report interchange.
+
+Worker requests normalize project names and positions out of calculation identity. Node titles remain dependencies because they affect pressure-series labels and blocked-node diagnostics. Dataset reference changes, parameters, connections, and explicit Run still invalidate execution.
 
 A future module needs port contracts, a parameter schema, a deterministic evaluator/kernel, registration, and numerical tests. Existing field kinds render automatically; only a new kind of interaction requires a shared widget implementation. This is a build-time extension contract, not a remote plugin loader. A future data connector owns retrieval, units, timestamps, release/revision semantics, and normalization; the core should still receive explicit data. There is no arbitrary code evaluation or network request inside a graph.
 

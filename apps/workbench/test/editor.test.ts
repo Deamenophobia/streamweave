@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { emptyProject, executeWorkbench, multiSourceExample } from "@streamweave/core";
 import { compatibleKinds, deleteElements, insertModule, sourceDraft } from "../src/editorModel";
-import { appendDatasets, readDatasets } from "../src/projectFiles";
-import { initialHistory, projectHistory } from "../src/projectHistory";
+import { appendDatasets } from "../src/documents/projectData";
+import { readDatasets } from "../src/platform/browserFiles";
+import { initialHistory, projectHistory } from "../src/documents/projectHistory";
 
 test("oversized import batches stop before reading excess files", async () => {
   let reads = 0;
@@ -145,5 +146,8 @@ test("import creates data assets only; a source binds to its own dataset when ex
   assert.equal(graph.nodes[0]?.params.column, "temperature");
   assert.equal(executeWorkbench(graph, datasets).nodes.sensor?.state, "ready");
   assert.throws(() => appendDatasets(project, Array(12).fill(datasets[0])), /12 datasets/);
-  await assert.rejects(readDatasets([new File(["invalid"], "sensor.txt")]), /CSV, JSON, or JSONL/);
+  await assert.rejects(
+    readDatasets([new File(["invalid"], "sensor.txt")]),
+    /\.csv, \.json, \.jsonl/,
+  );
 });

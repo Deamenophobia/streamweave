@@ -5,7 +5,8 @@ import {
   pressureExample,
   type WorkbenchProject,
 } from "@streamweave/core";
-import type { ProjectActions } from "./projectFiles";
+import type { ProjectActions } from "./documents/contracts";
+import { projectFileAccept } from "./adapters/projectJson";
 
 function Menu({ label, children }: { label: string; children: ReactNode }) {
   const ref = useRef<HTMLDetailsElement>(null);
@@ -108,7 +109,7 @@ export function WorkspaceHeader({
         className="hidden"
         ref={input}
         type="file"
-        accept=".json"
+        accept={projectFileAccept}
         aria-label="Open project file"
         onChange={(event) => {
           const file = event.currentTarget.files?.[0];

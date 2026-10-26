@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import type { WorkbenchProject } from "@streamweave/core";
 import { CanvasWorkspace } from "./CanvasWorkspace";
-import { DatasetsView } from "./DatasetsView";
+import { DatasetsView } from "./features/datasets/DatasetsView";
 import { ResultsView } from "./ResultsView";
 import { WorkspaceHeader } from "./WorkspaceHeader";
 import { WorkspaceSidebar } from "./WorkspaceSidebar";
 import { WorkspaceStatus } from "./WorkspaceStatus";
 import { sourceDraft, type ModuleDraft } from "./editorModel";
-import { loadInitialProject } from "./projectFiles";
-import { useGraphRun } from "./useGraphRun";
-import { useProjectDocuments } from "./useProjectDocuments";
-import { useProjectHistory } from "./useProjectHistory";
+import { loadInitialProject } from "./platform/browserStorage";
+import { useGraphRun } from "./execution/useGraphRun";
+import { useProjectDocuments } from "./documents/useProjectDocuments";
+import { useProjectHistory } from "./documents/useProjectHistory";
 import { useWorkspaceNavigation } from "./useWorkspaceNavigation";
 
 export function App() {

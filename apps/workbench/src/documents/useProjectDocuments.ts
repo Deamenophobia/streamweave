@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { WorkbenchProject } from "@streamweave/core";
-import {
-  appendDatasets,
-  downloadProject,
-  readDatasets,
-  saveProject,
-  type ProjectActions,
-} from "./projectFiles";
+import { projectExport } from "../adapters/projectJson";
+import { downloadFile, readDatasets } from "../platform/browserFiles";
+import { saveProject } from "../platform/browserStorage";
+import { appendDatasets } from "./projectData";
+import type { ProjectActions } from "./contracts";
 import { createProjectOpener } from "./projectOpening";
 import type { ProjectHistory } from "./useProjectHistory";
 
@@ -70,7 +68,7 @@ export function useProjectDocuments({ history, version, load, imported, notify }
     },
     download() {
       try {
-        downloadProject(project);
+        downloadFile(projectExport(project));
       } catch (error) {
         notify(`Could not export project: ${(error as Error).message}`);
       }

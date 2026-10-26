@@ -6,8 +6,9 @@ import {
   type WorkbenchProject,
 } from "@streamweave/core";
 import { DataView } from "./DataView";
-import { downloadCsv, downloadResults, type NamedValue } from "./projectFiles";
-import type { Execution } from "./useGraphRun";
+import { csvExport, resultsExport, type NamedValue } from "./adapters/resultFormats";
+import { downloadFile } from "./platform/browserFiles";
+import type { Execution } from "./execution/contracts";
 
 type ResultValue = NamedValue & { key: string };
 
@@ -113,13 +114,13 @@ function ResultDocument({
         <span>Values and quality states remain explicit.</span>
         <button
           disabled={!value || execution.busy}
-          onClick={() => value && downloadCsv(`${node.id}-${value.key}`, value.data)}
+          onClick={() => value && downloadFile(csvExport(`${node.id}-${value.key}`, value.data))}
         >
           Download CSV ↓
         </button>
         <button
           disabled={!values.length || execution.busy}
-          onClick={() => downloadResults(project, node.id, values)}
+          onClick={() => downloadFile(resultsExport(project, node.id, values))}
         >
           Results + project JSON ↓
         </button>

@@ -17,6 +17,8 @@ The current release is **v0.2**. Calculations run locally in a browser worker. N
 | Inspect, save, and reproduce a result                    | [Results and projects](results-and-projects.md)                           |
 | Understand the formulas and their assumptions            | [Numerical contract](../analytics.md)                                     |
 | Understand implementation boundaries                     | [Architecture](../architecture.md)                                        |
+| Find where to implement a new capability                 | [Extension ownership](extension-guide.md)                                 |
+| Choose a native file or interchange format               | [File formats and archiving](file-formats.md)                             |
 | Change the code or publish these docs                    | [Contributor guide](contributing.md)                                      |
 | Assess reliability and remaining gaps                    | [Code quality](../code-quality.md), [validation record](../validation.md) |
 | Diagnose an import or calculation error                  | [Troubleshooting](troubleshooting.md)                                     |

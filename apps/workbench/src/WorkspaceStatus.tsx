@@ -1,5 +1,5 @@
 import type { WorkbenchProject } from "@streamweave/core";
-import type { Execution } from "./useGraphRun";
+import type { Execution } from "./execution/contracts";
 
 export function WorkspaceStatus({
   project,

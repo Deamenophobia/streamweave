@@ -15,8 +15,8 @@ import { nodeTypes, type VisualNode } from "./ModuleNode";
 import { NodePicker } from "./NodePicker";
 import { useCanvasInsertion, type CanvasInsertion } from "./useCanvasInsertion";
 import { useGraphEditing } from "./useGraphEditing";
-import { type Execution } from "./useGraphRun";
-import { type ProjectHistory } from "./useProjectHistory";
+import { type Execution } from "./execution/contracts";
+import { type ProjectHistory } from "./documents/useProjectHistory";
 
 type Props = {
   history: ProjectHistory;

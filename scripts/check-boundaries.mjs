@@ -6,6 +6,15 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const core = resolve(root, "packages/core/src");
 const ui = resolve(root, "apps/workbench/src");
 
+// Low-level code must not depend on feature views or application orchestration.
+const allowedLayers = {
+  adapters: new Set(["adapters"]),
+  platform: new Set(["platform", "adapters"]),
+  documents: new Set(["documents", "platform", "adapters"]),
+  execution: new Set(["execution"]),
+};
+const uiLayer = (path) => relative(ui, path).split(sep)[0];
+
 async function sourceFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = await Promise.all(
@@ -30,6 +39,11 @@ for (const path of paths) {
   for (const specifier of imports) {
     if (path.startsWith(core + sep) && !specifier.startsWith("."))
       throw new Error(`Core must remain dependency-free: ${relative(root, path)} → ${specifier}`);
+    const layer = uiLayer(path);
+    if (["adapters", "platform"].includes(layer) && /^(react|@xyflow\/react)(\/|$)/.test(specifier))
+      throw new Error(
+        `${layer} must not import UI libraries: ${relative(root, path)} → ${specifier}`,
+      );
     if (!specifier.startsWith(".")) continue;
     const base = resolve(dirname(path), specifier).replace(/\.js$/, "");
     const target = [base, base + ".ts", base + ".tsx"].find((candidate) => known.has(candidate));
@@ -38,6 +52,14 @@ for (const path of paths) {
       throw new Error("Core imports outside its package.");
     if (path.startsWith(ui + sep) && target.startsWith(core + sep))
       throw new Error("Use @streamweave/core instead of importing core internals.");
+    if (
+      path.startsWith(ui + sep) &&
+      allowedLayers[layer] &&
+      !allowedLayers[layer].has(uiLayer(target))
+    )
+      throw new Error(
+        `Layer boundary: ${relative(root, path)} must not import ${relative(root, target)}`,
+      );
     targets.push(target);
   }
   dependencies.set(path, targets);

@@ -10,10 +10,10 @@ import {
   type GraphUpdate,
   type Point,
 } from "./editorModel";
-import { createId } from "./projectFiles";
+import { createId } from "./platform/ids";
 import type { VisualNode } from "./ModuleNode";
-import type { ProjectHistory } from "./useProjectHistory";
-import type { Execution } from "./useGraphRun";
+import type { ProjectHistory } from "./documents/useProjectHistory";
+import type { Execution } from "./execution/contracts";
 
 export function useGraphEditing(
   history: ProjectHistory,

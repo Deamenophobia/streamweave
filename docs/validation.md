@@ -4,7 +4,7 @@ Validation covers the local implementation and reproducibility. It makes no clai
 
 ## Automated checks — v0.2
 
-`npm run check` passes formatting, documentation-link validation, source boundary/cycle checks, TypeScript checks, all **50 tests**, and both production builds. `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` still executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the quality review on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
+`npm run check` passes formatting, documentation-link validation, source boundary/cycle checks, TypeScript checks, all **57 tests**, and both production builds. The examples were exercised in the original review: `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the quality review on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
 
 The 15 workbench tests cover:
 
@@ -24,6 +24,14 @@ Seven editor tests cover immutable connected insertion, compatible module search
 Three project-opening tests use controlled asynchronous completions to verify that late reads cannot replace a newer workspace, newer open requests win, and stale failures do not surface in another document. See [the code-quality review](code-quality.md) for scope and remaining gaps.
 
 Three module-contract tests cover an independently defined evaluator, invalid input/output rejection, non-finite outputs, schema defaults, and dependent numeric bounds. Two parameter-option tests verify resolution of the declared dataset/input port and graceful behavior when inputs are absent.
+
+## Extension/file boundaries acceptance — 2026-10-26
+
+- Seven additional automated tests cover both native project round-trips and identical serialized calculation results; non-finite input rejection before encoding; unknown project versions/results wrappers; equivalent CSV/JSON/JSONL import with missing cells; and calculation identity for names, positions, parameters, wires, and output-relevant node titles.
+- The production build was served separately on localhost port 5188. Dataset Preview and Columns & units rendered correctly after the feature split, including empty and populated states.
+- A renamed project downloaded as v2 JSON. After creating a blank workspace and importing the exported source CSV, the workspace contained one 121-row dataset and zero modules. Opening the downloaded project restored its name, two datasets, nine modules, eight connections, and four outputs.
+- Browser Save followed by reload restored the renamed project. Results showed 116/121 valid correlation values and all branches ready. The browser warning/error log was empty during these checks.
+- Source boundary/cycle checks cover 76 files, including enforced adapter/platform/document/execution dependency directions. These remain lightweight source-import checks, not a complete runtime dependency analysis.
 
 ## Module-boundary refactor acceptance — 2026-10-24
 

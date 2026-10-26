@@ -1,4 +1,4 @@
-# Code quality review — 2026-10-24
+# Code quality review — updated 2026-10-26
 
 ## Assessment
 
@@ -19,7 +19,7 @@ TypeScript additionally enforces unused-local, unused-parameter, and implicit-re
 
 ## Verification
 
-The resulting suite contains **50 tests**: 20 legacy accumulator/replay/pipeline tests, 15 general workbench tests, seven editor/import tests, three project-opening race tests, three module-contract tests, and two parameter-option tests. `npm run check` runs formatting, documentation-link validation, source boundary/cycle checks, type checking, tests, and production builds. Both terminal examples are also exercised during this review.
+The resulting suite contains **57 tests**: 20 legacy accumulator/replay/pipeline tests, 15 general workbench tests, seven editor/import tests, three project-opening race tests, three module-contract tests, two parameter-option tests, four file-format tests, and three calculation-identity tests. `npm run check` runs formatting, documentation-link validation, source boundary/cycle checks, type checking, tests, and production builds. Both terminal examples were exercised during the original review.
 
 `npm audit` reported **zero known vulnerabilities** for the installed lockfile on 2026-10-24. This is time-sensitive and does not cover application logic or unknown vulnerabilities. React Flow still produces its known non-fatal `use client` bundler warning in this client application.
 
@@ -32,6 +32,14 @@ The former core graph file combined metadata, module dispatch, validation, sched
 The inspector's module-specific conditions were replaced by shared parameter controls. Choice options, numeric limits, dependent maximums, time-unit conversions, and field visibility come from the definitions. Column controls resolve their declared dataset/input port. UI icon/detail presentation is separate from graph-edit operations.
 
 The two bundled projects and all their calculation results were compared before/after and remained structurally identical. Added tests cover an independently defined module, port/finite-output guards, schema defaults and dependent bounds, and data-dependent column choices. Import-boundary and cycle checks run in CI. The extension guide shows how to add a module without modifying the scheduler or generic inspector.
+
+## Extension and persistence boundaries — 2026-10-26
+
+The former `projectFiles.ts` combined codecs, browser I/O, local storage, ID generation, and dataset updates. Those now have separate owners in `adapters/`, `platform/`, and `documents/`. Execution owns its request/response contract and lifecycle in `execution/`; views import the status contract without depending on the lifecycle hook. The dataset feature has focused import, summary, and schema components. Import checks enforce dependency directions for these layers as well as the core boundary and source cycles.
+
+Project naming no longer invalidates calculations. Node titles remain dependencies because current output labels and error diagnostics use them. Native v2 project structure is unchanged. A shared core validator now checks in-memory projects before JSON serialization, preventing non-finite source values from being silently written as null. File adapters use UTF-8 byte limits.
+
+Seven added tests cover portable projects and matching serialized results for both examples, invalid values/versions, dataset reader equivalence, and calculation dependencies. A production-build browser check covered dataset preview/schema, CSV export/import, project download/open, browser save/reload, and ready results without browser warning/error logs. See [extension ownership](wiki/extension-guide.md), [file formats](wiki/file-formats.md), and the [validation record](validation.md).
 
 ## Remaining gaps
 

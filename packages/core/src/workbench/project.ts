@@ -5,6 +5,12 @@ import type { WorkbenchProject } from "./contracts.js";
 export function parseProject(text: string): WorkbenchProject {
   if (text.length > 15_000_000) throw new Error("Project exceeds 15 MB.");
   const project = JSON.parse(text) as WorkbenchProject;
+  validateProject(project);
+  return project;
+}
+
+/** Validate in-memory values before serialization can coerce non-finite numbers to null. */
+export function validateProject(project: WorkbenchProject): void {
   if (
     project?.version !== 2 ||
     project.format !== "streamweave-project" ||
@@ -26,5 +32,4 @@ export function parseProject(text: string): WorkbenchProject {
     if (ids.has(d.id)) throw new Error("Duplicate dataset ID.");
     ids.add(d.id);
   }
-  return project;
 }

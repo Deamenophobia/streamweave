@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { emptyProject, type WorkbenchProject } from "@streamweave/core";
-import { createProjectOpener } from "../src/projectOpening";
+import { createProjectOpener } from "../src/documents/projectOpening";
 
 function pendingRead() {
   let resolve!: (project: WorkbenchProject) => void;

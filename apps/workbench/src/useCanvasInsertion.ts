@@ -17,7 +17,7 @@ import {
   type ModuleDraft,
   type Point,
 } from "./editorModel";
-import { createId } from "./projectFiles";
+import { createId } from "./platform/ids";
 
 type Picker = {
   screen: Point;

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { WORKBENCH_MODULES, type WorkbenchKind, type WorkbenchProject } from "@streamweave/core";
 import { sourceDraft, type ModuleDraft } from "./editorModel";
 import type { WorkspaceRoute } from "./workspaceNavigation";
-import type { Execution } from "./useGraphRun";
+import type { Execution } from "./execution/contracts";
 
 type Props = {
   route: WorkspaceRoute;
