@@ -9,13 +9,16 @@ function fixture() {
   const expected = executeWorkbench(project.graph, project.datasets);
   const wire = {
     nodes: Object.fromEntries(
-      Object.entries(expected.nodes).map(([id, { inputs: _, ...node }]) => [id, node]),
+      Object.entries(expected.nodes).map(([id, { inputs: _, ...node }]) => [
+        id,
+        { ...node, key: id.padEnd(64, "_") },
+      ]),
     ),
     order: expected.order,
     engine: {
       id: "python",
-      version: "0.1.0",
-      protocolVersion: 1,
+      version: "0.2.0",
+      protocolVersion: 2,
       contractHash: "test",
       libraries: { numpy: "fixture", scipy: "fixture" },
     },
@@ -34,8 +37,20 @@ test("engine protocol reconstructs shared wire references and preserves result p
   );
   const exported = JSON.parse(String(resultsExport(project, "fit", [], result.engine).content));
   assert.equal(exported.engine.id, "python");
-  assert.equal(exported.engineVersion, "0.1.0");
+  assert.equal(exported.engineVersion, "0.2.0");
   assert.deepEqual(exported.project, JSON.parse(JSON.stringify(project)));
+  const reused = {
+    ...wire,
+    nodes: Object.fromEntries(
+      Object.entries(wire.nodes).map(([id, node]) => [
+        id,
+        { state: node.state, key: node.key, reused: true },
+      ]),
+    ),
+  };
+  const next = decodeRun(reused, project, "test", result);
+  assert.equal(next.run.nodes.alignment!.outputs, result.run.nodes.alignment!.outputs);
+  assert.throws(() => decodeRun(reused, project, "test"), /previous result/);
 });
 
 test("engine protocol rejects stale contracts, wrong graph identities and invalid numbers", () => {

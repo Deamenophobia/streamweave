@@ -8,21 +8,25 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from streamweave_engine.cache import encoded
 from streamweave_engine.catalogue import CONTRACT_HASH
-from streamweave_engine.jobs import Job, Jobs
+from streamweave_engine.errors import EngineError
+from streamweave_engine.jobs import Jobs
+from streamweave_engine.models import read_project
 from streamweave_engine.server import create_app
 
-PROJECT = json.loads(
-    (Path(__file__).resolve().parents[3] / ".local" / "engine-fixtures.json").read_text(
+FIXTURES = json.loads(
+    (Path(__file__).resolve().parents[3] / ".local/engine-fixtures.json").read_text(
         encoding="utf-8"
     )
-)[0]["project"]
+)
+PROJECT = FIXTURES[0]["project"]
 
 
 @pytest.fixture
 def client():
     headers = {
-        "X-Streamweave-Protocol": "1",
+        "X-Streamweave-Protocol": "2",
         "X-Streamweave-Session": str(uuid4()),
         "Origin": "http://127.0.0.1:5187",
     }
@@ -30,135 +34,191 @@ def client():
         yield connection
 
 
-def payload(project=PROJECT):
-    return {
-        "protocolVersion": 1,
+def upload(client, project=PROJECT):
+    bundle = str(uuid4())
+    assert client.put(f"/v2/datasets/{bundle}", json=project["datasets"]).status_code == 204
+    return bundle
+
+
+def submit(client, bundle, graph=PROJECT["graph"], known=None):
+    payload = {
+        "protocolVersion": 2,
         "contractHash": CONTRACT_HASH,
         "jobId": str(uuid4()),
-        "project": project,
+        "bundleId": bundle,
+        "graph": graph,
+        "knownResults": known or {},
     }
+    response = client.post("/v2/jobs", json=payload)
+    assert response.status_code == 202, response.text
+    return payload["jobId"]
 
 
-def wait_result(client, job_id):
+def result(client, key):
     for _ in range(300):
-        response = client.get(f"/v1/jobs/{job_id}")
-        assert response.status_code == 200
-        state = response.json()
-        if state["state"] != "running":
-            return state
+        snapshot = client.get(f"/v2/jobs/{key}")
+        assert snapshot.status_code == 200
+        state = snapshot.json()
+        assert "result" not in state  # Polling never retransmits data rows.
+        if state["state"] == "completed":
+            return client.get(f"/v2/jobs/{key}/result").json()
+        assert state["state"] == "running", state
         time.sleep(0.01)
     raise AssertionError("Job did not finish")
 
 
-def test_round_trip_and_release(client):
-    capabilities = client.get("/v1/capabilities").json()
-    assert len(capabilities["modules"]) == 15
-    assert capabilities["contractHash"] == CONTRACT_HASH
-    request = payload()
-    assert client.post("/v1/jobs", json=request).status_code == 202
-    result = wait_result(client, request["jobId"])
-    assert result["state"] == "completed"
-    assert result["progress"] == {"completed": 9, "total": 9}
-    assert result["result"]["nodes"]["fit"]["state"] == "ready"
+def test_dataset_reuse_incremental_results_and_branch_invalidation(client, monkeypatch):
+    from streamweave_engine import server
+
+    original, uploads = server.read_datasets, []
+
+    def counted(key, data):
+        uploads.append(key)
+        return original(key, data)
+
+    monkeypatch.setattr(server, "read_datasets", counted)
+    bundle = upload(client)
+    first_key = submit(client, bundle)
+    first = result(client, first_key)
+    assert first["nodes"]["source_a"]["sourceDataset"] == PROJECT["datasets"][0]["id"]
+    assert "data" not in first["nodes"]["source_a"]["outputs"]
+    known = {key: node["key"] for key, node in first["nodes"].items()}
+    client.delete(f"/v2/jobs/{first_key}")
+    second_key = submit(client, bundle, known=known)
+    second = result(client, second_key)
+    assert second["metrics"]["cacheHits"] == 9
+    assert all(node["reused"] for node in second["nodes"].values())
+    assert len(encoded(second)) < len(encoded(first)) / 5
+    graph = copy.deepcopy(PROJECT["graph"])
+    next(n for n in graph["nodes"] if n["id"] == "correlation")["params"]["window"] = 8
+    changed_key = submit(client, bundle, graph, known)
+    changed = result(client, changed_key)
+    assert changed["metrics"]["cacheHits"] == 7
+    assert "outputs" in changed["nodes"]["correlation"]
+    assert changed["nodes"]["fit"]["reused"]
+    assert uploads == [bundle]  # Graph edits never revalidate source rows.
     assert (
         client.get(
-            f"/v1/jobs/{request['jobId']}", headers={"X-Streamweave-Session": str(uuid4())}
+            f"/v2/jobs/{second_key}/result", headers={"X-Streamweave-Session": str(uuid4())}
         ).status_code
         == 404
     )
-    assert client.delete(f"/v1/jobs/{request['jobId']}").status_code == 204
-    assert client.get(f"/v1/jobs/{request['jobId']}").status_code == 404
-    request = payload()
-    assert client.post("/v1/jobs", json=request).status_code == 202
-    assert wait_result(client, request["jobId"])["result"]["metrics"]["cacheHits"] == 9
+    client.delete(f"/v2/jobs/{second_key}")
+    assert client.get(f"/v2/jobs/{second_key}").status_code == 404
 
 
-def test_rejects_untrusted_origins_hosts_protocol_and_large_bodies(client):
+def test_external_boundary_rejects_invalid_data_without_echoing_cells(client):
     assert (
-        client.get("/v1/capabilities", headers={"Origin": "https://untrusted.example"}).status_code
+        client.get("/v2/capabilities", headers={"Origin": "https://untrusted.example"}).status_code
         == 403
     )
-    assert client.get("/v1/capabilities", headers={"Host": "untrusted.example"}).status_code == 403
+    assert client.get("/v2/capabilities", headers={"Host": "untrusted.example"}).status_code == 403
     assert (
-        client.get("/v1/capabilities", headers={"X-Streamweave-Protocol": "2"}).status_code == 400
+        client.get("/v2/capabilities", headers={"X-Streamweave-Protocol": "1"}).status_code == 400
     )
-    bad = payload()
-    bad["contractHash"] = "old"
-    assert client.post("/v1/jobs", json=bad).status_code == 400
-    for key, value in (("jobId", {}), ("jobId", 1), ("protocolVersion", True)):
-        bad = {**payload(), key: value}
-        assert client.post("/v1/jobs", json=bad).status_code == 400
+    path = f"/v2/datasets/{uuid4()}"
+    data = copy.deepcopy(PROJECT["datasets"])
+    data[0]["rows"][0]["reading"] = "PRIVATE_FIXTURE_VALUE"
+    rejected = client.put(path, json=data)
+    assert rejected.status_code == 400 and "PRIVATE_FIXTURE_VALUE" not in rejected.text
     assert (
-        client.post(
-            "/v1/jobs", content="x" * 15_000_001, headers={"Content-Type": "application/json"}
+        client.put(path, content="[NaN]", headers={"Content-Type": "application/json"}).status_code
+        == 400
+    )
+    assert (
+        client.put(
+            path, content="x" * 15_000_001, headers={"Content-Type": "application/json"}
         ).status_code
         == 413
     )
-    assert (
-        client.post(
-            "/v1/jobs", content='{"value":NaN}', headers={"Content-Type": "application/json"}
-        ).status_code
-        == 400
+    missing = client.post(
+        "/v2/jobs",
+        json={
+            "protocolVersion": 2,
+            "contractHash": CONTRACT_HASH,
+            "jobId": str(uuid4()),
+            "bundleId": str(uuid4()),
+            "graph": PROJECT["graph"],
+        },
     )
+    assert missing.status_code == 409 and missing.json()["error"]["code"] == "datasets_missing"
     preflight = client.options(
-        "/v1/jobs",
+        path,
         headers={
-            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Method": "PUT",
             "Access-Control-Request-Headers": "content-type,x-streamweave-protocol,x-streamweave-session",
         },
     )
     assert preflight.status_code == 200
-    assert preflight.headers["access-control-allow-origin"] == "http://127.0.0.1:5187"
 
 
-def test_invalid_project_is_a_job_failure_without_echoing_data(client):
-    project = copy.deepcopy(PROJECT)
-    project["datasets"][0]["rows"][0]["reading"] = "PRIVATE_FIXTURE_VALUE"
-    request = payload(project)
-    assert client.post("/v1/jobs", json=request).status_code == 202
-    result = wait_result(client, request["jobId"])
-    assert result["state"] == "failed"
-    assert "PRIVATE_FIXTURE_VALUE" not in json.dumps(result)
+def test_real_rolling_job_cancellation_and_capacity(monkeypatch):
+    from streamweave_engine import statistics
 
-
-def test_cancellation_releases_running_job_and_bounds_concurrency(monkeypatch):
+    original = statistics.rolling_points
     entered, release = Event(), Event()
 
-    def controlled(_project, _cache, checkpoint, _progress):
-        entered.set()
-        assert release.wait(3)
-        checkpoint()
-        return {}
+    def controlled(source, width, minimum, operation, checkpoint):
+        calls = 0
 
-    monkeypatch.setattr("streamweave_engine.jobs.execute", controlled)
+        def pause_after_chunk():
+            nonlocal calls
+            calls += 1
+            if calls == 2:
+                entered.set()
+                assert release.wait(3)
+            checkpoint()
+
+        return original(source, width, minimum, operation, pause_after_chunk)
+
+    monkeypatch.setattr(statistics, "rolling_points", controlled)
+    study = read_project(
+        next(f["project"] for f in FIXTURES if f["name"] == "vectorized chunk boundaries")
+    )
     jobs = Jobs()
     try:
-        jobs.submit("a", "session", PROJECT)
-        assert entered.wait(2)
-        jobs.submit("b", "session", PROJECT)
-        with pytest.raises(OverflowError):
-            jobs.submit("c", "session", PROJECT)
-        jobs.remove("a", "session")
+        jobs.upload("s", study.bundle)
+        jobs.submit("a", "s", study.graph, study.bundle.id, {})
+        assert entered.wait(3)
+        jobs.submit("b", "s", study.graph, study.bundle.id, {})
+        with pytest.raises(EngineError, match="busy"):
+            jobs.submit("c", "s", study.graph, study.bundle.id, {})
+        jobs.remove("a", "s")
         release.set()
-        for _ in range(200):
-            if jobs.snapshot("a", "session") is None:
+        for _ in range(300):
+            if "a" not in jobs.jobs:
                 break
             time.sleep(0.01)
-        assert jobs.snapshot("a", "session") is None
+        assert "a" not in jobs.jobs
+        with pytest.raises(EngineError) as rejected:
+            jobs.result("a", "s")
+        assert rejected.value.code == "job_missing"
     finally:
         release.set()
         jobs.close()
 
 
-def test_retention_starts_at_completion_not_submission(monkeypatch):
-    monkeypatch.setattr("streamweave_engine.jobs.time.monotonic", lambda: 100.0)
+def test_idle_cleanup_releases_results_and_datasets_without_another_request():
+    study = read_project(PROJECT)
     jobs = Jobs()
     try:
-        jobs.jobs["long"] = Job(session="s", created=0, state="completed", finished=90)
-        jobs.jobs["old"] = Job(session="s", created=0, state="completed", finished=30)
-        jobs.jobs["active"] = Job(session="s", created=0)
-        assert jobs.snapshot("long", "s")["state"] == "completed"
-        assert jobs.snapshot("old", "s") is None
-        assert jobs.snapshot("active", "s")["state"] == "running"
+        jobs.upload("s", study.bundle)
+        jobs.submit("a", "s", study.graph, study.bundle.id, {})
+        for _ in range(300):
+            if jobs.jobs["a"].finished is not None:
+                break
+            time.sleep(0.01)
+        # A long calculation retains its result for 60 seconds after completion.
+        jobs.jobs["a"].created -= 100
+        jobs.cleanup()
+        assert jobs.snapshot("a", "s")["state"] == "completed"
+        jobs.jobs["a"].finished = time.monotonic() - 61
+        jobs.sessions.entries["s"].touched -= 301
+        jobs.start()
+        for _ in range(120):
+            if not jobs.jobs and not jobs.sessions.entries:
+                break
+            time.sleep(0.05)
+        assert not jobs.jobs and not jobs.sessions.entries
     finally:
         jobs.close()

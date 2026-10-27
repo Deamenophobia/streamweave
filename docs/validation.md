@@ -4,7 +4,27 @@ Validation covers the local implementation and reproducibility. It makes no clai
 
 ## Automated checks — v0.2
 
-`npm run check` covers formatting, documentation-link and shared-contract validation, source boundary/cycle checks, TypeScript checks, **62 TypeScript tests**, and both production builds. `npm run engine:check` covers Ruff formatting/linting and **25 Python tests**. The examples were exercised in the original review: `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the quality review on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
+`npm run check` covers formatting, documentation-link and shared-contract validation, source boundary/cycle checks, TypeScript checks, **62 TypeScript tests**, and both production builds. `npm run engine:check` covers Ruff formatting/linting, static Python types, and **19 Python tests**. The examples were exercised in the original review: `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the quality review on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
+
+## Backend hardening — 2026-10-28
+
+Mypy checks all 21 engine source files. Python coverage is consolidated into 19 tests: nine shared projects, meaningful numerical/cache/service behaviors, and dependency directions. Six repeated document-rejection cases, a pre-execution cancellation mock, and the elementary sample-deviation subcase were removed. Invalid external inputs are checked through the actual HTTP boundary; cancellation is checked after a real rolling kernel has processed a chunk. Timestamp/availability/count parity is exact, with tolerance applied only to calculated numeric values.
+
+The incremental-service check uploads datasets once, runs/reuses nine nodes, changes correlation with seven unaffected nodes reused, and proves source validation is not repeated. It also checks result/session isolation and a compact response. Idle cleanup is verified without a follow-up API request. The independent rolling study found and guards the transition-to-constant variance/correlation edge case while checking missing values, large-offset data, and changes in scale. A further regression check prevents overflowing removed moments from becoming a valid zero deviation.
+
+Production-preview browser acceptance confirmed the Browser default, Python execution, nine-node reuse, a correlation edit with seven cached nodes, and Undo restoring the original results. Results JSON retained complete series values with Python 0.2.0 / protocol 2 provenance and numerical-library versions. The 40,000-input-row study completed, cancellation returned the UI to a cancelled state, and Run recovered ready results. The service test separately verifies cancellation within an active numerical kernel. No warning/error entries appeared in the browser log. `local-engine.png` records the updated result view and end-to-end timing. The temporary preview and engine processes were stopped after verification.
+
+### Current performance
+
+Same CPU and Python/numerical-library versions as the earlier run; Windows and Node 22.14.0. Five runs per case, medians. The TypeScript core runs under Node; it excludes worker transfer and UI rendering. Fresh Python HTTP includes dataset upload/validation, graph execution, result JSON, and 120 ms polling. Cached HTTP reuses both the validated source bundle and unchanged decoded outputs. Engine time excludes one-time upload preparation. The benchmark opens fresh HTTP connections to avoid a stale Node keep-alive socket after synchronous JS timing; this includes connection overhead in the HTTP figures.
+
+| Rows per source / window | TypeScript core | Python engine | Python HTTP fresh | Python HTTP cached | Sampled service peak RSS |
+| ------------------------ | --------------: | ------------: | ----------------: | -----------------: | -----------------------: |
+| 1,000 / 100              |         27.4 ms |       55.0 ms |           99.4 ms |             7.4 ms |                 83.7 MiB |
+| 5,000 / 500              |        319.5 ms |      285.2 ms |          585.3 ms |             7.0 ms |                111.0 MiB |
+| 20,000 / 1,000           |      2,619.0 ms |    1,180.7 ms |        1,914.0 ms |             8.2 ms |                203.2 MiB |
+
+All ten nodes were reused in cached cases. For the largest study, fresh request/response bodies total about 15.1 MB; a cached request/response totals about 5.4 KB. HTTP headers are excluded from byte counts. Peak RSS is sampled every 20 ms across each case, includes retained sessions/results and the Python runtime, and excludes Node/browser/probe processes. It can miss shorter allocation spikes and is not a hard memory-limit guarantee. Raw samples and baselines are in [engine-benchmark.json](engine-benchmark.json). The small fresh study remains faster in Browser.
 
 ## Local engine verification — 2026-10-27
 
@@ -26,7 +46,7 @@ Windows, Intel Core i5-10400F, Node 22.14.0, Python 3.12.10, NumPy 2.3.4, SciPy 
 
 TypeScript is the browser's core executed under Node, excluding worker transfer and UI rendering. Python engine time includes validation, hashing, calculations, and preparation of bounded outputs but excludes HTTP serialization. HTTP includes complete request/result JSON and 120 ms polling, excluding UI rendering. These are different layers, deliberately reported separately. Python's calculation phase helps the larger cases; full transfer overhead erases the gain for small/medium cold runs. An unchanged cached large request is about 3.4 times faster than the uncached TypeScript core in this fixture, not a general language speed claim. No peak-memory benchmark or production throughput claim is implied.
 
-Reproduce with `npm run engine:start` and `npm run engine:benchmark`. Raw samples are retained in [engine-benchmark.json](engine-benchmark.json); the script writes fresh measurements under `.local/`.
+Reproduce with `npm run engine:start` and `npm run engine:benchmark`. Raw samples are retained in [2026-10-27 raw samples](engine-benchmark-2026-10-27.json); the script writes fresh measurements under `.local/`.
 
 The 15 workbench tests cover:
 

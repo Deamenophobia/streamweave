@@ -34,7 +34,7 @@ export function WorkspaceStatus({
         {project.datasets.length} data sources ·{" "}
         {execution.engineId === "python" ? "Python" : "Browser"}
         {execution.metrics &&
-          ` · ${Math.round(execution.metrics.durationMs)} ms · ${execution.metrics.cacheHits} cached`}
+          ` · ${Math.round(execution.metrics.totalMs ?? execution.metrics.durationMs)} ms${execution.metrics.totalMs === undefined ? "" : " total"} · ${execution.metrics.cacheHits} cached`}
       </span>
     </footer>
   );

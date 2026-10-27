@@ -5,7 +5,7 @@ export type Progress = { completed: number; total: number };
 export type EngineResult = {
   run: WorkbenchRun;
   engine: EngineMetadata;
-  metrics: { durationMs: number; cacheHits: number; nodeCount: number };
+  metrics: { durationMs: number; cacheHits: number; nodeCount: number; totalMs?: number };
 };
 export type ComputeEngine = {
   run: (

@@ -19,6 +19,10 @@ def test_dependency_boundaries_and_cycles():
         "registry",
         "graph",
         "cache",
+        "contracts",
+        "rolling",
+        "errors",
+        "transport",
     }
     dependencies = {}
     for name, path in modules.items():

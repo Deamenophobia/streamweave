@@ -1,42 +1,15 @@
 import math
 import operator
+from collections.abc import Callable
 
-from .context import Context, Value, column_pair, series
-
-
-def numeric_point(base: Value, value: float, status="valid") -> Value:
-    return {
-        **base,
-        "value": value if math.isfinite(value) else None,
-        "status": status if math.isfinite(value) else "undefined",
-    }
+from .context import Context, column_pair, series
+from .contracts import Outputs, Point
 
 
-def transform(context: Context) -> Value:
-    src, p = context.value("series"), context.params
-    lag, operation = int(p["lag"]), p["operation"]
-    points = []
-    for i, point in enumerate(src["points"]):
-        previous = src["points"][i - lag] if i >= lag else None
-        base = {
-            "timestampMs": point["timestampMs"],
-            "availableAtMs": max(
-                point.get("availableAtMs", point["timestampMs"]),
-                previous.get("availableAtMs", previous["timestampMs"]) if previous else 0,
-            ),
-        }
-        if previous is None:
-            points.append({**base, "value": None, "status": "warming"})
-        elif previous["value"] is None or previous["status"] != "valid":
-            points.append({**base, "value": None, "status": previous["status"]})
-        elif operation == "lag":
-            points.append({**base, "value": previous["value"], "status": "valid"})
-        elif point["value"] is None or point["status"] != "valid":
-            points.append({**base, "value": None, "status": point["status"]})
-        else:
-            points.append(numeric_point(base, change(point["value"], previous["value"], operation)))
-    unit = {"percent": "%", "log": "log ratio"}.get(operation, src["unit"])
-    return {"series": series(f"{src['name']} · {operation}({lag})", unit, points)}
+def numeric_point(base: Point, value: float) -> Point:
+    if not math.isfinite(value):
+        return {**base, "value": None, "status": "undefined"}
+    return {**base, "value": value}
 
 
 def change(value: float, previous: float, operation: str) -> float:
@@ -47,31 +20,76 @@ def change(value: float, previous: float, operation: str) -> float:
     return math.log(value / previous) if value > 0 and previous > 0 else math.nan
 
 
-def scale(context: Context) -> Value:
-    src, p = context.value("series"), context.params
+def changed_point(point: Point, previous: Point | None, operation: str) -> Point:
+    base: Point = {
+        "timestampMs": point["timestampMs"],
+        "value": None,
+        "status": "warming",
+        "availableAtMs": max(
+            point.get("availableAtMs", point["timestampMs"]),
+            previous.get("availableAtMs", previous["timestampMs"]) if previous else 0,
+        ),
+    }
+    if previous is None:
+        return base
+    if previous["value"] is None or previous["status"] != "valid":
+        return {**base, "status": previous["status"]}
+    if operation == "lag":
+        return {**base, "value": previous["value"], "status": "valid"}
+    if point["value"] is None or point["status"] != "valid":
+        return {**base, "status": point["status"]}
+    return numeric_point(
+        {**base, "status": "valid"}, change(point["value"], previous["value"], operation)
+    )
+
+
+def transform(context: Context) -> Outputs:
+    source, lag, operation = context.series(), int(context.number("lag")), context.text("operation")
+    points: list[Point] = []
+    for i, point in enumerate(source["points"]):
+        if i % 256 == 0:
+            context.checkpoint()
+        points.append(
+            changed_point(point, source["points"][i - lag] if i >= lag else None, operation)
+        )
+    unit = {"percent": "%", "log": "log ratio"}.get(operation, source["unit"])
+    return {"series": series(f"{source['name']} · {operation}({lag})", unit, points)}
+
+
+def scale(context: Context) -> Outputs:
+    source = context.series()
+    factor, offset = context.number("factor"), context.number("offset")
     points = [
-        dict(point)
+        point.copy()
         if point["value"] is None
-        else numeric_point(point, point["value"] * p["factor"] + p["offset"], point["status"])
-        for point in src["points"]
+        else numeric_point(point, point["value"] * factor + offset)
+        for point in source["points"]
     ]
-    return {"series": series(src["name"] + " · scaled", p.get("unit") or src["unit"], points)}
+    return {
+        "series": series(
+            source["name"] + " · scaled", context.text("unit") or source["unit"], points
+        )
+    }
 
 
-def smooth(context: Context) -> Value:
-    src, previous, points = context.value("series"), None, []
-    for point in src["points"]:
+def smooth(context: Context) -> Outputs:
+    source = context.series()
+    previous: Point | None = None
+    points: list[Point] = []
+    for index, point in enumerate(source["points"]):
+        if index % 256 == 0:
+            context.checkpoint()
         if point["value"] is None or point["status"] != "valid":
-            points.append(dict(point))
+            points.append(point.copy())
             previous = None
             continue
         value = point["value"]
-        if previous is not None:
+        if previous is not None and previous["value"] is not None:
             alpha = 1 - 2 ** (
-                -(point["timestampMs"] - previous["timestampMs"]) / context.params["halfLifeMs"]
+                -(point["timestampMs"] - previous["timestampMs"]) / context.number("halfLifeMs")
             )
             value = previous["value"] + alpha * (value - previous["value"])
-        output = {
+        output: Point = {
             **point,
             "value": value,
             "availableAtMs": max(
@@ -81,12 +99,16 @@ def smooth(context: Context) -> Value:
         }
         previous = output
         points.append(output)
-    return {"series": {**src, "name": src["name"] + " · EMA", "points": points}}
+    return {"series": {**source, "name": source["name"] + " · EMA", "points": points}}
 
 
-def arithmetic(context: Context) -> Value:
-    frame, p = context.value("frame"), context.params
-    x, y, operation = p["x"], p["y"], p["operation"]
+def arithmetic(context: Context) -> Outputs:
+    frame, x, y, operation = (
+        context.frame(),
+        context.text("x"),
+        context.text("y"),
+        context.text("operation"),
+    )
     a, b = column_pair(frame, x, y)
     if operation in ("add", "subtract") and a.get("unit") != b.get("unit"):
         raise ValueError("Addition and subtraction require matching units. Convert units upstream.")
@@ -96,19 +118,23 @@ def arithmetic(context: Context) -> Value:
         unit = f"{units[0]} × {units[1]}"
     if operation == "divide":
         unit = "ratio" if units[0] == units[1] else f"{units[0]} / {units[1]}"
-    calculate = {
+    operations: dict[str, Callable[[float, float], float]] = {
         "add": operator.add,
         "subtract": operator.sub,
         "multiply": operator.mul,
         "divide": lambda left, right: left / right if right else math.nan,
-    }[operation]
-    points = []
-    for row in frame["rows"]:
+    }
+    points: list[Point] = []
+    for index, row in enumerate(frame["rows"]):
+        if index % 256 == 0:
+            context.checkpoint()
         left, right = row["values"][x], row["values"][y]
-        base = {"timestampMs": row["timestampMs"]}
+        base: Point = {"timestampMs": row["timestampMs"], "value": None, "status": "valid"}
         if left is None or right is None:
-            status = row["statuses"][x] if row["statuses"][x] != "valid" else row["statuses"][y]
-            points.append({**base, "value": None, "status": status})
+            base["status"] = (
+                row["statuses"][x] if row["statuses"][x] != "valid" else row["statuses"][y]
+            )
+            points.append(base)
         else:
-            points.append(numeric_point(base, calculate(left, right)))
+            points.append(numeric_point(base, operations[operation](left, right)))
     return {"series": series(f"{a['label']} {operation} {b['label']}", unit, points)}

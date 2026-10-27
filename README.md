@@ -4,6 +4,8 @@ A visual numerical workbench for multiple datasets, composable calculations, and
 
 Read the [GitLab wiki](https://gitlab.com/Deamenophobia/streamweave/-/wikis/home) or its [versioned documentation source](docs/wiki/home.md) for tutorials, module reference, architecture, and the [code-quality review](docs/code-quality.md).
 
+See [Contributing](CONTRIBUTING.md) for development guidance and the [Changelog](CHANGELOG.md) for meaningful changes.
+
 Import independent sources, align their timestamps, and connect calculations on a canvas. Branch a dataset into several analyses, duplicate a module with different parameters, and inspect each intermediate result. Charts, tables, and exports remain separate outputs.
 
 ![Streamweave numerical workbench](docs/workbench.png)

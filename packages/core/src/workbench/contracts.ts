@@ -64,7 +64,7 @@ export interface WorkbenchRun {
 export interface EngineMetadata {
   id: "browser" | "python";
   version: string;
-  protocolVersion: 1;
+  protocolVersion: 1 | 2;
   contractHash?: string;
   libraries?: Record<string, string>;
 }

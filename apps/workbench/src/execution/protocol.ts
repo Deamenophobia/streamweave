@@ -97,7 +97,8 @@ export function decodeRun(
   raw: unknown,
   project: WorkbenchProject,
   expectedHash: string,
-): EngineResult {
+  previous?: DecodedRun,
+): DecodedRun {
   const value = record(raw),
     nodes = record(value.nodes),
     engine = record(value.engine),
@@ -113,7 +114,7 @@ export function decodeRun(
     throw new Error("Engine graph does not match the requested project.");
   if (
     engine.id !== "python" ||
-    engine.protocolVersion !== 1 ||
+    engine.protocolVersion !== 2 ||
     engine.contractHash !== expectedHash ||
     typeof engine.version !== "string"
   )
@@ -131,15 +132,32 @@ export function decodeRun(
   )
     throw new Error("Invalid engine metrics.");
   const result: WorkbenchRun = { order: value.order as string[], nodes: Object.create(null) };
+  const keys: Record<string, string> = Object.create(null);
   for (const node of project.graph.nodes) {
-    const response = record(nodes[node.id]),
-      outputs = record(response.outputs);
+    const response = record(nodes[node.id]);
     if (
       !["ready", "error", "blocked"].includes(String(response.state)) ||
       (response.state !== "ready" && typeof response.error !== "string")
     )
       throw new Error("Invalid engine module state.");
+    if (response.state === "ready") {
+      if (typeof response.key !== "string" || response.key.length !== 64)
+        throw new Error("Invalid engine result identity.");
+      keys[node.id] = response.key;
+    }
+    const retained = response.reused === true;
+    if (
+      retained &&
+      (response.state !== "ready" ||
+        !previous ||
+        previous.keys[node.id] !== response.key ||
+        !response.key)
+    )
+      throw new Error("Engine referenced an unavailable previous result.");
+    const outputs = retained ? previous!.run.nodes[node.id]!.outputs : record(response.outputs);
     for (const [id, output] of Object.entries(outputs)) {
+      // Retained results crossed this boundary already; do not scan their rows again.
+      if (retained) continue;
       const data = validateValue(output);
       if (
         !WORKBENCH_MODULES[node.type].outputs.some(
@@ -147,6 +165,12 @@ export function decodeRun(
         )
       )
         throw new Error("Invalid engine output port.");
+    }
+    if (response.sourceDataset !== undefined) {
+      const dataset = project.datasets.find((data) => data.id === response.sourceDataset);
+      if (retained || node.type !== "source" || !dataset || node.params.datasetId !== dataset.id)
+        throw new Error("Engine referenced an unavailable source dataset.");
+      outputs.data = { kind: "table", columns: dataset.columns, rows: dataset.rows };
     }
     result.nodes[node.id] = {
       state: response.state as "ready" | "error" | "blocked",
@@ -164,14 +188,17 @@ export function decodeRun(
     target.inputs.push({ edge, data });
   }
   return {
+    keys,
     run: result,
     engine: {
       id: "python",
       version: engine.version,
-      protocolVersion: 1,
+      protocolVersion: 2,
       contractHash: expectedHash,
       libraries: libraries as Record<string, string>,
     },
     metrics: metrics as EngineResult["metrics"],
   };
 }
+
+export type DecodedRun = EngineResult & { keys: Record<string, string> };

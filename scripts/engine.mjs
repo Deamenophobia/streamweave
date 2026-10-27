@@ -33,6 +33,7 @@ if (mode === "setup") {
   run(process.execPath, ["--import", "tsx", "scripts/engine-fixtures.ts"]);
   run(python, ["-m", "ruff", "check", "."], directory);
   run(python, ["-m", "ruff", "format", "--check", "."], directory);
+  run(python, ["-m", "mypy"], directory);
   run(python, ["-m", "pytest", "-q"], directory);
 } else {
   throw new Error("Use setup, start, or check. Python 3.12+ is required.");

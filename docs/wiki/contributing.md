@@ -11,7 +11,7 @@ npm ci
 npm run format
 npm run check
 npm run engine:setup   # Python 3.12; first run only
-npm run engine:check   # Ruff, Python boundaries, numerical/parity/service tests
+npm run engine:check   # Ruff, Mypy, numerical/parity/service behavior
 npm run demo
 npm run demo:pressure
 npm audit
@@ -39,7 +39,7 @@ This is a build-time extension contract. It does not load arbitrary remote plugi
 
 Keep project mutations immutable. A connected insertion or deletion with its incident wires must be one undo transaction. Canvas measurements and selection remain outside serialized projects. Graph positions must not trigger recalculation.
 
-Worker changes cancel the previous worker. File operations must not replace a newer document when an earlier read finishes late. The project-opening coordinator has explicit race tests; keep those invariants when changing file handling.
+Engine changes cancel the previous run; Python checks cooperative cancellation between nodes and numerical chunks. File operations must not replace a newer document when an earlier read finishes late. The project-opening coordinator has explicit race tests; keep those invariants when changing file handling.
 
 ## Documentation and wiki publishing
 
@@ -59,6 +59,10 @@ git -C .local/wiki push origin HEAD
 ```
 
 On an existing clone, pull its current branch before preparing files and inspect remote edits. Publish after the corresponding code/docs commit reaches the project repository. Check the GitLab-rendered Home page, sidebar, images, and representative internal links. Main-project CI validates documentation links; the wiki has a separate Git history and no application build pipeline.
+
+## Test scope
+
+Prefer tests for observable numerical behavior, cache invalidation, cancellation, external input rejection, and compatibility. Reuse shared fixtures instead of repeating the same validation assertion at each internal layer. Match timestamps and counts exactly; use justified tolerance for computed floating-point values. Avoid tests that merely mirror implementation steps or verify language/library arithmetic.
 
 ## Review standard
 

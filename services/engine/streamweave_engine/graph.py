@@ -2,14 +2,15 @@
 
 from .catalogue import MODULES, validate_parameters
 from .context import Context
+from .contracts import Edge, Graph, Node, Outputs
 from .registry import EVALUATORS
 
 
-def plan(graph):
+def plan(graph: Graph) -> tuple[dict[str, Node], dict[str, list[Edge]], list[str]]:
     nodes = {n["id"]: n for n in graph["nodes"]}
     if len(nodes) != len(graph["nodes"]):
         raise ValueError("Module IDs must be unique.")
-    incoming = {key: [] for key in nodes}
+    incoming: dict[str, list[Edge]] = {key: [] for key in nodes}
     ids, wires, occupied = set(), set(), set()
     for edge in graph["edges"]:
         if edge["id"] in ids or edge["id"] in ("constructor", "prototype"):
@@ -49,7 +50,7 @@ def plan(graph):
     return nodes, incoming, order
 
 
-def evaluate(context: Context):
+def evaluate(context: Context) -> Outputs:
     definition = MODULES[context.node["type"]]
     for port in definition["inputs"]:
         values = [i["data"] for i in context.inputs if i["edge"]["targetPort"] == port["id"]]
@@ -58,14 +59,5 @@ def evaluate(context: Context):
             raise ValueError(
                 f"Connect {minimum}{' or more' if port.get('multiple') else ''} {' / '.join(port['accepts'])} input{'s' if minimum > 1 else ''} to {port['label']}."
             )
-        if any(v["kind"] not in port["accepts"] for v in values):
-            raise ValueError(f"Incompatible data on {port['label']}.")
     validate_parameters(context.node["type"], context.params)
-    outputs = EVALUATORS[context.node["type"]](context)
-    ports = {p["id"]: p for p in definition["outputs"]}
-    if any(
-        key not in ports or value["kind"] not in ports[key]["accepts"]
-        for key, value in outputs.items()
-    ):
-        raise ValueError("Invalid output contract.")
-    return outputs
+    return EVALUATORS[context.node["type"]](context)

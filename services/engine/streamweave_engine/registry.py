@@ -1,13 +1,17 @@
 """The only composition point for Python evaluators."""
 
+from collections.abc import Callable
+
 from .alignment import align
 from .catalogue import MODULES
+from .context import Context
+from .contracts import Outputs
 from .pressure import pressure
 from .statistics import correlation, regression, rolling
 from .tables import field, filter_rows, output, source
 from .transforms import arithmetic, scale, smooth, transform
 
-EVALUATORS = {
+EVALUATORS: dict[str, Callable[[Context], Outputs]] = {
     "source": source,
     "field": field,
     "filter": filter_rows,

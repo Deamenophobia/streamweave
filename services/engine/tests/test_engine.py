@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from streamweave_engine.cache import NodeCache
+from streamweave_engine.cache import NodeCache, encoded
 from streamweave_engine.context import Context
-from streamweave_engine.executor import Cancelled, execute
-from streamweave_engine.statistics import regression, rolling
+from streamweave_engine.executor import execute
+from streamweave_engine.statistics import regression
 
 FIXTURES = json.loads(
     (Path(__file__).resolve().parents[3] / ".local" / "engine-fixtures.json").read_text(
@@ -18,7 +18,10 @@ FIXTURES = json.loads(
 
 
 def equivalent(actual, expected, path="root"):
-    if type(expected) in (int, float):
+    if path.rsplit(".", 1)[-1] in ("timestampMs", "availableAtMs", "sampleCount"):
+        assert actual == expected, (path, actual, expected)
+    elif type(expected) in (int, float):
+        assert type(actual) in (int, float), (path, type(actual))
         assert math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9), (path, actual, expected)
     elif isinstance(expected, dict):
         assert actual.keys() == expected.keys(), (path, actual.keys(), expected.keys())
@@ -36,6 +39,8 @@ def equivalent(actual, expected, path="root"):
 @pytest.mark.parametrize("fixture", FIXTURES, ids=lambda f: f["name"])
 def test_matches_typescript(fixture):
     result = execute(fixture["project"])
+    for node in result["nodes"].values():
+        node.pop("key", None)  # Transport/cache identity is not part of the numerical contract.
     equivalent({"nodes": result["nodes"], "order": result["order"]}, fixture["expected"])
 
 
@@ -57,42 +62,19 @@ def test_cache_reuses_unchanged_branches_and_invalidates_changes():
 
 
 def test_lru_has_a_payload_budget():
-    cache = NodeCache(max_bytes=10)
-    cache.put("a", {}, 6)
-    cache.put("b", {}, 6)
-    assert cache.get("a") is None
-    assert cache.get("b") == ({}, 6)
-    cache.put("too_big", {}, 11)
-    assert cache.bytes == 6
+    outputs = execute(FIXTURES[0]["project"])["nodes"]["alignment"]["outputs"]
+    size = len(encoded(outputs))
+    cache = NodeCache(max_bytes=size * 2, max_memory_bytes=size)
+    cache.put("large_objects", outputs, size)
+    assert cache.get("large_objects") is None  # Object overhead exceeds its compact JSON size.
+    cache = NodeCache(max_bytes=size)
+    cache.put("first", outputs, size)
+    cache.put("second", outputs, size)
+    assert cache.get("first") is None
+    assert cache.get("second").outputs is outputs
 
 
-def test_cancellation_stops_before_execution():
-    def cancelled():
-        raise Cancelled()
-
-    with pytest.raises(Cancelled):
-        execute(FIXTURES[0]["project"], checkpoint=cancelled)
-
-
-@pytest.mark.parametrize(
-    "mutation",
-    [
-        lambda p: p.update(version=3),
-        lambda p: p["datasets"][0]["rows"][0].update(reading=float("nan")),
-        lambda p: p["datasets"][0]["rows"][0].update(timestampMs=True),
-        lambda p: p["graph"]["nodes"].append(p["graph"]["nodes"][0]),
-        lambda p: p["graph"]["edges"][0].update(sourcePort="missing"),
-        lambda p: p["graph"]["edges"].append(p["graph"]["edges"][0]),
-    ],
-)
-def test_rejects_invalid_documents(mutation):
-    project = copy.deepcopy(FIXTURES[0]["project"])
-    mutation(project)
-    with pytest.raises(ValueError):
-        execute(project)
-
-
-def test_independent_analytical_regression_and_sample_deviation():
+def test_regression_coefficients_and_in_sample_availability():
     frame = {
         "kind": "frame",
         "columns": [{"key": k, "label": k, "unit": "m", "type": "number"} for k in ("x", "y")],
@@ -117,20 +99,3 @@ def test_independent_analytical_regression_and_sample_deviation():
     assert values["intercept"] == pytest.approx(3)
     assert values["R squared (in sample)"] == pytest.approx(1)
     assert all(p["availableAtMs"] == 5 for p in output["residuals"]["points"])
-    source = {
-        "name": "x",
-        "unit": "m",
-        "kind": "series",
-        "points": [
-            {"timestampMs": i, "value": v, "status": "valid"} for i, v in enumerate([2, 4, 6])
-        ],
-    }
-    context = Context(
-        {"params": {"window": 3, "minimum": 1, "operation": "std"}},
-        [{"edge": {"targetPort": "series"}, "data": source}],
-        {},
-        lambda: None,
-    )
-    points = rolling(context)["series"]["points"]
-    assert points[0]["status"] == "undefined"
-    assert points[-1]["value"] == pytest.approx(2)

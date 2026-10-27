@@ -1,4 +1,4 @@
-"""Pure document execution with optional cache, progress, and cooperative cancellation."""
+"""Document execution with optional cache, progress, and cooperative cancellation."""
 
 import time
 
@@ -9,23 +9,35 @@ from . import VERSION
 from .cache import NodeCache, digest, encoded
 from .catalogue import CONTRACT_HASH
 from .context import Context
+from .contracts import Checkpoint, Input, NodeResult, Progress, RunResult, Study
 from .graph import evaluate, plan
-from .models import Project
+from .models import read_project
 
 
-class Cancelled(Exception):
-    pass
+def execute(
+    project: object,
+    cache: NodeCache | None = None,
+    checkpoint: Checkpoint = lambda: None,
+    progress: Progress = lambda done, total: None,
+) -> RunResult:
+    """Standalone document boundary; HTTP jobs already hold a validated Study."""
+    checkpoint()
+    return execute_study(read_project(project), cache, checkpoint, progress)
 
 
-def execute(project, cache=None, checkpoint=lambda: None, progress=lambda done, total: None):
+def execute_study(
+    study: Study,
+    cache: NodeCache | None = None,
+    checkpoint: Checkpoint = lambda: None,
+    progress: Progress = lambda done, total: None,
+) -> RunResult:
     started = time.perf_counter()
     checkpoint()
-    document = Project.model_validate(project).model_dump(exclude_unset=True)
-    nodes, incoming, order = plan(document["graph"])
-    datasets = {d["id"]: d for d in document["datasets"]}
-    dataset_keys = {key: digest(value) for key, value in datasets.items()}
+    nodes, incoming, order = plan(study.graph)
+    datasets, dataset_keys = study.bundle.datasets, study.bundle.keys
     cache = cache if cache is not None else NodeCache()
-    results, keys = {}, {}
+    results: dict[str, NodeResult] = {}
+    keys: dict[str, str] = {}
     hits, output_bytes = 0, 0
     for index, key in enumerate(order):
         checkpoint()
@@ -48,15 +60,16 @@ def execute(project, cache=None, checkpoint=lambda: None, progress=lambda done, 
             keys[key] = digest(results[key])
             progress(index + 1, len(order))
             continue
-        inputs = [
+        inputs: list[Input] = [
             {"edge": edge, "data": results[edge["source"]]["outputs"][edge["sourcePort"]]}
             for edge in edges
         ]
         cache_key = digest(
             {
                 "contract": CONTRACT_HASH,
+                "engine": (VERSION, np.__version__, scipy.__version__),
                 "node": {k: v for k, v in node.items() if k != "position"},
-                "dataset": dataset_keys.get(node["params"].get("datasetId")),
+                "dataset": dataset_keys.get(str(node["params"].get("datasetId", ""))),
                 "inputs": [{"edge": edge, "upstream": keys[edge["source"]]} for edge in edges],
             }
         )
@@ -69,14 +82,14 @@ def execute(project, cache=None, checkpoint=lambda: None, progress=lambda done, 
                 checkpoint()
                 cache.put(cache_key, outputs, size)
             else:
-                outputs, size = cached
+                outputs, size = cached.outputs, cached.encoded_bytes
                 hits += 1
-            output_bytes += size
-            if output_bytes > 30_000_000:
+            if output_bytes + size > 30_000_000:
                 raise ValueError(
                     "Combined results exceed 30 MB. Reduce the study or output branches."
                 )
-            results[key] = {"state": "ready", "outputs": outputs}
+            output_bytes += size
+            results[key] = {"state": "ready", "outputs": outputs, "key": cache_key}
         except (ValueError, ArithmeticError) as error:
             results[key] = {"state": "error", "outputs": {}, "error": str(error)}
         progress(index + 1, len(order))
@@ -87,7 +100,7 @@ def execute(project, cache=None, checkpoint=lambda: None, progress=lambda done, 
         "engine": {
             "id": "python",
             "version": VERSION,
-            "protocolVersion": 1,
+            "protocolVersion": 2,
             "contractHash": CONTRACT_HASH,
             "libraries": {"numpy": np.__version__, "scipy": scipy.__version__},
         },
