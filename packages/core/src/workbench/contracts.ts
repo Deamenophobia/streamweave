@@ -59,3 +59,12 @@ export interface WorkbenchRun {
   nodes: Record<string, NodeResult>;
   order: string[];
 }
+
+/** Execution provenance belongs to results, never to the portable project document. */
+export interface EngineMetadata {
+  id: "browser" | "python";
+  version: string;
+  protocolVersion: 1;
+  contractHash?: string;
+  libraries?: Record<string, string>;
+}

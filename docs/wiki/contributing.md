@@ -10,6 +10,8 @@ Use [Extension ownership](extension-guide.md) to choose the implementation locat
 npm ci
 npm run format
 npm run check
+npm run engine:setup   # Python 3.12; first run only
+npm run engine:check   # Ruff, Python boundaries, numerical/parity/service tests
 npm run demo
 npm run demo:pressure
 npm audit
@@ -27,6 +29,7 @@ After interaction changes, inspect the browser: import assets without creating m
 4. Add its kind to [contracts.ts](../../packages/core/src/workbench/contracts.ts), register it in [registry.ts](../../packages/core/src/workbench/registry.ts), and choose an icon in [modulePresentation.ts](../../apps/workbench/src/modulePresentation.ts). The generic inspector renders existing field kinds automatically; the scheduler needs no module-specific branch. Use explicit units in labels; stored time parameters are milliseconds and `displayScale` describes their UI conversion.
 5. Test independent analytical fixtures, missing/degenerate cases, graph composition, and portable project behavior. Do not merely restate the implementation in tests.
 6. Update the [module reference](module-reference.md), [numerical contract](../analytics.md), and relevant example or tutorial.
+7. Run `npm run contracts:generate`, implement/register the Python evaluator, and add a cross-engine fixture. See [Local Python engine](local-engine.md) for ownership and verification. Both engines must agree on the public data contract.
 
 A data adapter should normalize timestamps, units, release/revision information, and bounds before the core receives a dataset. Network retrieval does not belong inside a calculation node.
 

@@ -809,3 +809,16 @@ body {
     right: 15px;
   }
 }
+.engine-help {
+  max-width: 240px;
+  margin: 10px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.engine-guide {
+  display: block;
+  margin: 8px 12px 12px;
+  color: var(--accent);
+  font-size: 12px;
+}

@@ -27,9 +27,18 @@ npm run demo           # execute the multi-source study without the browser
 npm run demo:pressure  # retained signed-event replay example
 ```
 
+An optional **local Python engine** implements the same 15 modules with NumPy and SciPy. Install Python 3.12, then run:
+
+```sh
+npm run engine:setup   # creates an isolated environment with pinned dependencies
+npm run engine:start   # local service at 127.0.0.1:5191
+```
+
+Choose **Engine → Python · local service** in the workbench. Browser remains the default and works without Python. Both engines use the same portable project format; results record their producing engine. See [Local Python engine](docs/wiki/local-engine.md) for architecture, cancellation, caching, limits, and measured performance. Python is not faster for every study; transport overhead matters.
+
 ## Navigate the workspace
 
-The persistent sidebar switches between three focused views. **Canvas** contains the graph and module library; **Datasets** inspects source rows, columns, units, and missing cells; **Results** displays one selected output or intermediate module at a time. The top **File / Edit / Examples** menus remain available in every view. Navigation preserves the graph, selection, and canvas viewport; browser Back and Forward work between views.
+The persistent sidebar switches between three focused views. **Canvas** contains the graph and module library; **Datasets** inspects source rows, columns, units, and missing cells; **Results** displays one selected output or intermediate module at a time. The top **File / Edit / Examples / Engine** menus remain available in every view. Navigation preserves the graph, selection, and canvas viewport; browser Back and Forward work between views.
 
 The canvas library supports search and drag-and-drop. Clicking a module shows its description; **Place module** explicitly starts placement. Its **Sources** tab provides the same placement controls for imported datasets. Charts and source previews occupy their own views instead of being stacked below the graph.
 

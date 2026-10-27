@@ -120,7 +120,7 @@ function ResultDocument({
         </button>
         <button
           disabled={!values.length || execution.busy}
-          onClick={() => downloadFile(resultsExport(project, node.id, values))}
+          onClick={() => downloadFile(resultsExport(project, node.id, values, execution.engine))}
         >
           Results + project JSON ↓
         </button>

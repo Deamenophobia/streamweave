@@ -1,0 +1,841 @@
+{
+  "protocolVersion": 1,
+  "projectVersion": 2,
+  "modules": {
+    "source": {
+      "title": "Dataset",
+      "category": "Data",
+      "description": "Expose a table and an optional selected numeric series. Each source chooses its own dataset.",
+      "inputs": [],
+      "outputs": [
+        {
+          "id": "data",
+          "label": "data",
+          "accepts": [
+            "table"
+          ]
+        },
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "key": "datasetId",
+          "label": "Dataset",
+          "kind": "dataset",
+          "default": ""
+        },
+        {
+          "key": "column",
+          "label": "Value column",
+          "kind": "column",
+          "from": {
+            "dataset": "datasetId"
+          },
+          "default": "",
+          "numericOnly": true
+        },
+        {
+          "key": "label",
+          "label": "Series label",
+          "kind": "text",
+          "default": ""
+        },
+        {
+          "key": "unit",
+          "label": "Unit",
+          "kind": "text",
+          "default": ""
+        }
+      ],
+      "defaults": {
+        "datasetId": "",
+        "column": "",
+        "label": "",
+        "unit": ""
+      }
+    },
+    "field": {
+      "title": "Select series",
+      "category": "Data",
+      "description": "Select a numeric column from a timestamped table or aligned frame. Preserves timestamps, availability, and missing states.",
+      "inputs": [
+        {
+          "id": "data",
+          "label": "data",
+          "accepts": [
+            "table",
+            "frame"
+          ],
+          "multiple": false,
+          "minimum": 1
+        }
+      ],
+      "outputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "key": "column",
+          "label": "Value column",
+          "kind": "column",
+          "from": {
+            "input": "data"
+          },
+          "default": "",
+          "numericOnly": true
+        },
+        {
+          "key": "label",
+          "label": "Series label",
+          "kind": "text",
+          "default": ""
+        },
+        {
+          "key": "unit",
+          "label": "Unit",
+          "kind": "text",
+          "default": ""
+        }
+      ],
+      "defaults": {
+        "column": "",
+        "label": "",
+        "unit": ""
+      }
+    },
+    "filter": {
+      "title": "Filter rows",
+      "category": "Process",
+      "description": "Keep rows matching a column condition. Gaps remain explicit downstream.",
+      "inputs": [
+        {
+          "id": "data",
+          "label": "data",
+          "accepts": [
+            "table"
+          ],
+          "multiple": false,
+          "minimum": 1
+        }
+      ],
+      "outputs": [
+        {
+          "id": "data",
+          "label": "data",
+          "accepts": [
+            "table"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "key": "column",
+          "label": "Filter column",
+          "kind": "column",
+          "from": {
+            "input": "data"
+          },
+          "default": ""
+        },
+        {
+          "key": "operator",
+          "label": "Condition",
+          "kind": "choice",
+          "default": "gte",
+          "options": [
+            {
+              "value": "gte",
+              "label": "Greater than or equal"
+            },
+            {
+              "value": "lte",
+              "label": "Less than or equal"
+            },
+            {
+              "value": "eq",
+              "label": "Equals"
+            },
+            {
+              "value": "present",
+              "label": "Is present"
+            }
+          ]
+        },
+        {
+          "key": "value",
+          "label": "Comparison value",
+          "kind": "text",
+          "default": "0"
+        }
+      ],
+      "defaults": {
+        "column": "",
+        "operator": "gte",
+        "value": "0"
+      }
+    },
+    "align": {
+      "title": "Align timestamps",
+      "category": "Process",
+      "description": "Connect two or more series. Exact intersection/union, or a regular grid using only earlier available observations with a maximum age.",
+      "inputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ],
+          "multiple": true,
+          "minimum": 2
+        }
+      ],
+      "outputs": [
+        {
+          "id": "frame",
+          "label": "frame",
+          "accepts": [
+            "frame"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "key": "mode",
+          "label": "Alignment mode",
+          "kind": "choice",
+          "default": "previous",
+          "options": [
+            {
+              "value": "previous",
+              "label": "Regular grid · previous available"
+            },
+            {
+              "value": "intersection",
+              "label": "Exact timestamps · intersection"
+            },
+            {
+              "value": "union",
+              "label": "Exact timestamps · union"
+            }
+          ]
+        },
+        {
+          "key": "stepMs",
+          "label": "Grid interval (seconds)",
+          "kind": "number",
+          "default": 60000,
+          "min": 1,
+          "max": 31536000000,
+          "integer": true,
+          "displayScale": 1000
+        },
+        {
+          "key": "maxAgeMs",
+          "label": "Maximum age (seconds)",
+          "kind": "number",
+          "default": 150000,
+          "min": 0,
+          "max": 31536000000,
+          "integer": true,
+          "displayScale": 1000
+        }
+      ],
+      "help": "All times are UTC. No interpolation or future values are used. Missing and stale cells remain null.",
+      "defaults": {
+        "mode": "previous",
+        "stepMs": 60000,
+        "maxAgeMs": 150000
+      }
+    },
+    "transform": {
+      "title": "Change / lag",
+      "category": "Process",
+      "description": "Difference, percentage change, log change, or lag by observation count. Use regular alignment first when equal time intervals are required.",
+      "inputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ],
+          "multiple": false,
+          "minimum": 1
+        }
+      ],
+      "outputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "key": "operation",
+          "label": "Transformation",
+          "kind": "choice",
+          "default": "difference",
+          "options": [
+            {
+              "value": "difference",
+              "label": "Absolute difference"
+            },
+            {
+              "value": "percent",
+              "label": "Percentage change"
+            },
+            {
+              "value": "log",
+              "label": "Log change (positive values)"
+            },
+            {
+              "value": "lag",
+              "label": "Lag observations"
+            }
+          ]
+        },
+        {
+          "key": "lag",
+          "label": "Lag (observations)",
+          "kind": "number",
+          "default": 1,
+          "min": 1,
+          "max": 1000,
+          "integer": true
+        }
+      ],
+      "defaults": {
+        "operation": "difference",
+        "lag": 1
+      }
+    },
+    "scale": {
+      "title": "Scale & offset",
+      "category": "Process",
+      "description": "Apply value × factor + offset and explicitly assign an output unit.",
+      "inputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ],
+          "multiple": false,
+          "minimum": 1
+        }
+      ],
+      "outputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "key": "factor",
+          "label": "Factor",
+          "kind": "number",
+          "default": 1,
+          "min": -1000000000000,
+          "max": 1000000000000
+        },
+        {
+          "key": "offset",
+          "label": "Offset",
+          "kind": "number",
+          "default": 0,
+          "min": -1000000000000,
+          "max": 1000000000000
+        },
+        {
+          "key": "unit",
+          "label": "Output unit",
+          "kind": "text",
+          "default": "value"
+        }
+      ],
+      "defaults": {
+        "factor": 1,
+        "offset": 0,
+        "unit": "value"
+      }
+    },
+    "smooth": {
+      "title": "Smooth",
+      "category": "Process",
+      "description": "Time-based exponential moving average. Missing observations reset the filter.",
+      "inputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ],
+          "multiple": false,
+          "minimum": 1
+        }
+      ],
+      "outputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "key": "halfLifeMs",
+          "label": "Smoothing half-life (seconds)",
+          "kind": "number",
+          "default": 180000,
+          "min": 1,
+          "max": 31536000000,
+          "displayScale": 1000
+        }
+      ],
+      "defaults": {
+        "halfLifeMs": 180000
+      }
+    },
+    "rolling": {
+      "title": "Rolling statistic",
+      "category": "Analyze",
+      "description": "Mean, sample standard deviation, minimum, maximum, or count over trailing observations. Minimum valid sample count is explicit.",
+      "inputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ],
+          "multiple": false,
+          "minimum": 1
+        }
+      ],
+      "outputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "key": "operation",
+          "label": "Statistic",
+          "kind": "choice",
+          "default": "mean",
+          "options": [
+            {
+              "value": "mean",
+              "label": "Mean"
+            },
+            {
+              "value": "std",
+              "label": "Sample standard deviation"
+            },
+            {
+              "value": "min",
+              "label": "Minimum"
+            },
+            {
+              "value": "max",
+              "label": "Maximum"
+            },
+            {
+              "value": "count",
+              "label": "Valid count"
+            }
+          ]
+        },
+        {
+          "key": "window",
+          "label": "Window (observations)",
+          "kind": "number",
+          "default": 10,
+          "min": 2,
+          "max": 1000,
+          "integer": true
+        },
+        {
+          "key": "minimum",
+          "label": "Minimum valid samples",
+          "kind": "number",
+          "default": 3,
+          "min": 1,
+          "max": {
+            "parameter": "window"
+          },
+          "integer": true
+        }
+      ],
+      "defaults": {
+        "operation": "mean",
+        "window": 10,
+        "minimum": 3
+      }
+    },
+    "arithmetic": {
+      "title": "Pair arithmetic",
+      "category": "Analyze",
+      "description": "Add, subtract, multiply, or divide two aligned columns. Addition/subtraction require matching units.",
+      "inputs": [
+        {
+          "id": "frame",
+          "label": "frame",
+          "accepts": [
+            "frame"
+          ],
+          "multiple": false,
+          "minimum": 1
+        }
+      ],
+      "outputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "key": "x",
+          "label": "X column",
+          "kind": "column",
+          "from": {
+            "input": "frame"
+          },
+          "default": "",
+          "numericOnly": true
+        },
+        {
+          "key": "y",
+          "label": "Y column",
+          "kind": "column",
+          "from": {
+            "input": "frame"
+          },
+          "default": "",
+          "numericOnly": true
+        },
+        {
+          "key": "operation",
+          "label": "Operation",
+          "kind": "choice",
+          "default": "subtract",
+          "options": [
+            {
+              "value": "add",
+              "label": "X + Y"
+            },
+            {
+              "value": "subtract",
+              "label": "X − Y"
+            },
+            {
+              "value": "multiply",
+              "label": "X × Y"
+            },
+            {
+              "value": "divide",
+              "label": "X / Y"
+            }
+          ]
+        }
+      ],
+      "defaults": {
+        "x": "",
+        "y": "",
+        "operation": "subtract"
+      }
+    },
+    "correlation": {
+      "title": "Rolling correlation",
+      "category": "Analyze",
+      "description": "Pearson correlation over trailing aligned rows, using complete pairs. Constant series are undefined; sample counts are retained.",
+      "inputs": [
+        {
+          "id": "frame",
+          "label": "frame",
+          "accepts": [
+            "frame"
+          ],
+          "multiple": false,
+          "minimum": 1
+        }
+      ],
+      "outputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "key": "window",
+          "label": "Window (observations)",
+          "kind": "number",
+          "default": 20,
+          "min": 3,
+          "max": 1000,
+          "integer": true
+        },
+        {
+          "key": "minimum",
+          "label": "Minimum valid samples",
+          "kind": "number",
+          "default": 5,
+          "min": 3,
+          "max": {
+            "parameter": "window"
+          },
+          "integer": true
+        },
+        {
+          "key": "x",
+          "label": "X column",
+          "kind": "column",
+          "from": {
+            "input": "frame"
+          },
+          "default": "",
+          "numericOnly": true
+        },
+        {
+          "key": "y",
+          "label": "Y column",
+          "kind": "column",
+          "from": {
+            "input": "frame"
+          },
+          "default": "",
+          "numericOnly": true
+        }
+      ],
+      "defaults": {
+        "window": 20,
+        "minimum": 5,
+        "x": "",
+        "y": ""
+      }
+    },
+    "regression": {
+      "title": "Linear fit",
+      "category": "Analyze",
+      "description": "Descriptive OLS: Y = intercept + slope × X. Fits the complete supplied sample. Residuals and R² are in-sample, not forecasting results.",
+      "inputs": [
+        {
+          "id": "frame",
+          "label": "frame",
+          "accepts": [
+            "frame"
+          ],
+          "multiple": false,
+          "minimum": 1
+        }
+      ],
+      "outputs": [
+        {
+          "id": "model",
+          "label": "model",
+          "accepts": [
+            "table"
+          ]
+        },
+        {
+          "id": "residuals",
+          "label": "residuals",
+          "accepts": [
+            "series"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "key": "x",
+          "label": "X column",
+          "kind": "column",
+          "from": {
+            "input": "frame"
+          },
+          "default": "",
+          "numericOnly": true
+        },
+        {
+          "key": "y",
+          "label": "Y column",
+          "kind": "column",
+          "from": {
+            "input": "frame"
+          },
+          "default": "",
+          "numericOnly": true
+        }
+      ],
+      "help": "Fits every complete pair in the supplied frame. R² and residuals describe that same sample. Change or filter inputs to choose a fit period.",
+      "defaults": {
+        "x": "",
+        "y": ""
+      }
+    },
+    "pressure": {
+      "title": "Directional pressure",
+      "category": "Analyze",
+      "description": "Optional signed-event measure. Requires numeric direction (1 / −1) and positive weight columns. No direction is inferred.",
+      "inputs": [
+        {
+          "id": "data",
+          "label": "data",
+          "accepts": [
+            "table"
+          ],
+          "multiple": false,
+          "minimum": 1
+        }
+      ],
+      "outputs": [
+        {
+          "id": "series",
+          "label": "series",
+          "accepts": [
+            "series"
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "key": "windowMs",
+          "label": "Pressure window (seconds)",
+          "kind": "number",
+          "default": 30000,
+          "min": 1,
+          "max": 3600000,
+          "integer": true,
+          "displayScale": 1000
+        },
+        {
+          "key": "halfLifeMs",
+          "label": "Decay half-life (seconds)",
+          "kind": "number",
+          "default": 10000,
+          "min": 1,
+          "max": 3600000,
+          "displayScale": 1000
+        },
+        {
+          "key": "minimum",
+          "label": "Minimum observations",
+          "kind": "number",
+          "default": 5,
+          "min": 1,
+          "max": 100000,
+          "integer": true
+        },
+        {
+          "key": "stepMs",
+          "label": "Sample interval (seconds)",
+          "kind": "number",
+          "default": 1000,
+          "min": 1,
+          "max": 3600000,
+          "integer": true,
+          "displayScale": 1000
+        }
+      ],
+      "defaults": {
+        "windowMs": 30000,
+        "halfLifeMs": 10000,
+        "minimum": 5,
+        "stepMs": 1000
+      }
+    },
+    "chart": {
+      "title": "Chart",
+      "category": "Output",
+      "description": "Connect several series or aligned frames. Each series has its own scale and unit; measurements are never combined.",
+      "inputs": [
+        {
+          "id": "in",
+          "label": "in",
+          "accepts": [
+            "series",
+            "frame"
+          ],
+          "multiple": true,
+          "minimum": 1
+        }
+      ],
+      "outputs": [],
+      "parameters": [],
+      "defaults": {}
+    },
+    "table": {
+      "title": "Table",
+      "category": "Output",
+      "description": "Inspect exact values, missing states, and metadata. Page through all rows.",
+      "inputs": [
+        {
+          "id": "in",
+          "label": "in",
+          "accepts": [
+            "table",
+            "series",
+            "frame"
+          ],
+          "multiple": false,
+          "minimum": 1
+        }
+      ],
+      "outputs": [],
+      "parameters": [],
+      "defaults": {}
+    },
+    "export": {
+      "title": "Export",
+      "category": "Output",
+      "description": "Export CSV values or JSON results with the complete project, source datasets, and calculation parameters.",
+      "inputs": [
+        {
+          "id": "in",
+          "label": "in",
+          "accepts": [
+            "table",
+            "series",
+            "frame"
+          ],
+          "multiple": false,
+          "minimum": 1
+        }
+      ],
+      "outputs": [],
+      "parameters": [],
+      "defaults": {}
+    }
+  }
+}

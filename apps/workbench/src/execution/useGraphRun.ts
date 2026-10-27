@@ -1,30 +1,51 @@
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import type { WorkbenchProject } from "@streamweave/core";
-import type { Execution, WorkerResponse } from "./contracts";
+import type { EngineId, Execution } from "./contracts";
 import { calculationKey, calculationRequest } from "./calculation";
+import { browserEngine } from "./browserEngine";
+import { pythonEngine } from "./pythonEngine";
+
+const engines = { browser: browserEngine, python: pythonEngine };
 
 export function useGraphRun(project: WorkbenchProject) {
+  const [engineId, setEngine] = useState<EngineId>("browser");
   const [execution, setExecution] = useState<Execution>({ run: null, busy: true, error: "" });
   const [revision, rerun] = useReducer((value: number) => value + 1, 0);
+  const active = useRef<AbortController | null>(null);
   const { datasets } = project;
   const computation = calculationKey(project);
 
   useEffect(() => {
-    setExecution({ run: null, busy: true, error: "" });
-    const worker = new Worker(new URL("./graph.worker.ts", import.meta.url), { type: "module" });
-    worker.onmessage = ({ data }: MessageEvent<WorkerResponse>) => {
-      setExecution({ run: data.run ?? null, busy: false, error: data.error ?? "" });
-    };
-    worker.onerror = () => {
-      setExecution({
-        run: null,
-        busy: false,
-        error: "Calculation worker failed. Reload the workbench.",
+    const controller = new AbortController();
+    active.current = controller;
+    setExecution({
+      run: null,
+      busy: true,
+      error: "",
+      progress: { completed: 0, total: project.graph.nodes.length },
+    });
+    void engines[engineId]
+      .run(calculationRequest(project), controller.signal, (progress) => {
+        if (!controller.signal.aborted) setExecution((previous) => ({ ...previous, progress }));
+      })
+      .then((result) => {
+        if (!controller.signal.aborted) setExecution({ ...result, busy: false, error: "" });
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted)
+          setExecution({
+            run: null,
+            busy: false,
+            error: error instanceof Error ? error.message : "Calculation failed.",
+          });
       });
-    };
-    worker.postMessage(calculationRequest(project));
-    return () => worker.terminate();
-  }, [computation, datasets, revision]);
+    return () => controller.abort();
+  }, [computation, datasets, revision, engineId]);
 
-  return { ...execution, rerun };
+  function cancel() {
+    active.current?.abort();
+    setExecution({ run: null, busy: false, error: "Calculation cancelled. Run to try again." });
+  }
+
+  return { ...execution, engineId, setEngine, rerun, cancel };
 }

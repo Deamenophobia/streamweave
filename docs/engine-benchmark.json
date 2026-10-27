@@ -1,0 +1,172 @@
+{
+  "recordedAt": "2026-10-27T14:08:36.219Z",
+  "cpu": "Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz",
+  "platform": "win32",
+  "node": "v22.14.0",
+  "samplesPerCase": 5,
+  "description": "Two sources, timestamp alignment, rolling correlation, sample standard deviation, OLS, four outputs. Warm runtimes. Browser core measured in Node; HTTP includes JSON and 120 ms polling, excludes UI rendering.",
+  "records": [
+    {
+      "rowsPerSource": 1000,
+      "totalRows": 2000,
+      "window": 100,
+      "samples": [
+        {
+          "javascriptMs": 45.93040000000019,
+          "pythonEngineMs": 46.9957000004797,
+          "pythonCachedMs": 52.465200000369805,
+          "httpFreshMs": 387.3283000000001,
+          "httpCachedMs": 225.92450000000008,
+          "cacheHits": 10
+        },
+        {
+          "javascriptMs": 51.346100000000206,
+          "pythonEngineMs": 71.26489999973273,
+          "pythonCachedMs": 15.50909999969008,
+          "httpFreshMs": 248.0922999999998,
+          "httpCachedMs": 174.18449999999984,
+          "cacheHits": 10
+        },
+        {
+          "javascriptMs": 49.67459999999983,
+          "pythonEngineMs": 45.78450000008161,
+          "pythonCachedMs": 13.498799999069888,
+          "httpFreshMs": 199.14739999999983,
+          "httpCachedMs": 187.39339999999993,
+          "cacheHits": 10
+        },
+        {
+          "javascriptMs": 37.60680000000002,
+          "pythonEngineMs": 65.12549999933981,
+          "pythonCachedMs": 15.087599998878432,
+          "httpFreshMs": 198.00459999999975,
+          "httpCachedMs": 199.80880000000025,
+          "cacheHits": 10
+        },
+        {
+          "javascriptMs": 30.245800000000145,
+          "pythonEngineMs": 53.78279999968072,
+          "pythonCachedMs": 10.220899999694666,
+          "httpFreshMs": 181.44829999999956,
+          "httpCachedMs": 179.92379999999957,
+          "cacheHits": 10
+        }
+      ],
+      "medians": {
+        "javascriptMs": 45.93040000000019,
+        "pythonEngineMs": 53.78279999968072,
+        "pythonCachedMs": 15.087599998878432,
+        "httpFreshMs": 199.14739999999983,
+        "httpCachedMs": 187.39339999999993
+      }
+    },
+    {
+      "rowsPerSource": 5000,
+      "totalRows": 10000,
+      "window": 500,
+      "samples": [
+        {
+          "javascriptMs": 447.6817000000001,
+          "pythonEngineMs": 350.470100000166,
+          "pythonCachedMs": 373.5540999987279,
+          "httpFreshMs": 650.0598,
+          "httpCachedMs": 376.3923999999997,
+          "cacheHits": 10
+        },
+        {
+          "javascriptMs": 483.78150000000005,
+          "pythonEngineMs": 315.13509999967937,
+          "pythonCachedMs": 64.07519999993383,
+          "httpFreshMs": 632.3364999999994,
+          "httpCachedMs": 377.28719999999885,
+          "cacheHits": 10
+        },
+        {
+          "javascriptMs": 444.45380000000114,
+          "pythonEngineMs": 351.8509000004997,
+          "pythonCachedMs": 59.38179999975546,
+          "httpFreshMs": 703.2945999999993,
+          "httpCachedMs": 396.22329999999965,
+          "cacheHits": 10
+        },
+        {
+          "javascriptMs": 564.8239000000012,
+          "pythonEngineMs": 389.35959999980696,
+          "pythonCachedMs": 70.30760000088776,
+          "httpFreshMs": 660.4514999999992,
+          "httpCachedMs": 384.2654000000002,
+          "cacheHits": 10
+        },
+        {
+          "javascriptMs": 515.0623999999989,
+          "pythonEngineMs": 390.987299999324,
+          "pythonCachedMs": 76.71220000156609,
+          "httpFreshMs": 651.1046999999999,
+          "httpCachedMs": 414.3058000000001,
+          "cacheHits": 10
+        }
+      ],
+      "medians": {
+        "javascriptMs": 483.78150000000005,
+        "pythonEngineMs": 351.8509000004997,
+        "pythonCachedMs": 70.30760000088776,
+        "httpFreshMs": 651.1046999999999,
+        "httpCachedMs": 384.2654000000002
+      }
+    },
+    {
+      "rowsPerSource": 20000,
+      "totalRows": 40000,
+      "window": 1000,
+      "samples": [
+        {
+          "javascriptMs": 3600.523000000001,
+          "pythonEngineMs": 2590.362400000231,
+          "pythonCachedMs": 2454.1368999998667,
+          "httpFreshMs": 3701.1278999999995,
+          "httpCachedMs": 1251.9280999999974,
+          "cacheHits": 10
+        },
+        {
+          "javascriptMs": 3542.474199999997,
+          "pythonEngineMs": 2748.0634000003192,
+          "pythonCachedMs": 360.7888999995339,
+          "httpFreshMs": 4310.576099999998,
+          "httpCachedMs": 1049.886099999996,
+          "cacheHits": 10
+        },
+        {
+          "javascriptMs": 3507.3821000000025,
+          "pythonEngineMs": 2233.897400001297,
+          "pythonCachedMs": 223.41299999970943,
+          "httpFreshMs": 3154.0846999999994,
+          "httpCachedMs": 1047.9455000000016,
+          "cacheHits": 10
+        },
+        {
+          "javascriptMs": 3579.9187999999995,
+          "pythonEngineMs": 2611.2818000001425,
+          "pythonCachedMs": 272.9770000005374,
+          "httpFreshMs": 3243.0975000000035,
+          "httpCachedMs": 1062.1027999999933,
+          "cacheHits": 10
+        },
+        {
+          "javascriptMs": 3585.249800000005,
+          "pythonEngineMs": 2205.3617000001395,
+          "pythonCachedMs": 213.65679999871645,
+          "httpFreshMs": 3363.665300000008,
+          "httpCachedMs": 1264.1912000000011,
+          "cacheHits": 10
+        }
+      ],
+      "medians": {
+        "javascriptMs": 3579.9187999999995,
+        "pythonEngineMs": 2590.362400000231,
+        "pythonCachedMs": 272.9770000005374,
+        "httpFreshMs": 3363.665300000008,
+        "httpCachedMs": 1062.1027999999933
+      }
+    }
+  ]
+}

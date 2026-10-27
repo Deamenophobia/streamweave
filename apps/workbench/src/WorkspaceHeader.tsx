@@ -8,6 +8,7 @@ import {
 import type { ProjectActions } from "./documents/contracts";
 import { projectFileAccept } from "./adapters/projectJson";
 import { AppearanceSelect } from "./features/appearance/AppearanceSelect";
+import type { EngineId } from "./execution/contracts";
 
 function Menu({ label, children }: { label: string; children: ReactNode }) {
   const ref = useRef<HTMLDetailsElement>(null);
@@ -55,6 +56,9 @@ type Props = {
   canRedo: boolean;
   busy: boolean;
   run: () => void;
+  cancel: () => void;
+  engineId: EngineId;
+  setEngine: (engine: EngineId) => void;
 };
 
 export function WorkspaceHeader({
@@ -68,6 +72,9 @@ export function WorkspaceHeader({
   canRedo,
   busy,
   run,
+  cancel,
+  engineId,
+  setEngine,
 }: Props) {
   const input = useRef<HTMLInputElement>(null);
   return (
@@ -95,6 +102,26 @@ export function WorkspaceHeader({
           <button onClick={() => load(multiSourceExample())}>Two-source study</button>
           <button onClick={() => load(pressureExample())}>Signed-event study</button>
         </Menu>
+        <Menu label="Engine">
+          <button aria-pressed={engineId === "browser"} onClick={() => setEngine("browser")}>
+            {engineId === "browser" ? "✓ " : ""}Browser · built in
+          </button>
+          <button aria-pressed={engineId === "python"} onClick={() => setEngine("python")}>
+            {engineId === "python" ? "✓ " : ""}Python · local service
+          </button>
+          <p className="engine-help">
+            Python runs on this computer and must be started separately. The choice applies to this
+            session.
+          </p>
+          <a
+            className="engine-guide"
+            href="https://gitlab.com/Deamenophobia/streamweave/-/wikis/local-engine"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Local engine setup ↗
+          </a>
+        </Menu>
       </nav>
       <input
         className="workspace-name"
@@ -104,8 +131,8 @@ export function WorkspaceHeader({
         onChange={(event) => rename(event.target.value)}
       />
       <AppearanceSelect />
-      <button className="run-button" onClick={run} disabled={busy}>
-        {busy ? "Computing…" : "↻ Run"}
+      <button className="run-button" onClick={busy ? cancel : run}>
+        {busy ? "■ Cancel" : "↻ Run"}
       </button>
       <input
         className="hidden"

@@ -9,8 +9,26 @@ verify:
     - npm ci --no-fund
     - npm run check
     - npm run demo
+    - npm run engine:fixtures
   artifacts:
     paths:
       - apps/workbench/dist/
       - packages/core/dist/
+      - .local/engine-fixtures.json
     expire_in: 7 days
+
+python-engine:
+  image: python:3.12-bookworm
+  stage: verify
+  needs:
+    - job: verify
+      artifacts: true
+  variables:
+    OPENBLAS_NUM_THREADS: "1"
+    OMP_NUM_THREADS: "1"
+  script:
+    - python -m pip install -r services/engine/requirements.txt
+    - cd services/engine
+    - python -m ruff check .
+    - python -m ruff format --check .
+    - python -m pytest -q

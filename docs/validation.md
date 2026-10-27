@@ -4,7 +4,29 @@ Validation covers the local implementation and reproducibility. It makes no clai
 
 ## Automated checks — v0.2
 
-`npm run check` passes formatting, documentation-link validation, source boundary/cycle checks, TypeScript checks, all **60 tests**, and both production builds. The examples were exercised in the original review: `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the quality review on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
+`npm run check` covers formatting, documentation-link and shared-contract validation, source boundary/cycle checks, TypeScript checks, **62 TypeScript tests**, and both production builds. `npm run engine:check` covers Ruff formatting/linting and **25 Python tests**. The examples were exercised in the original review: `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the quality review on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
+
+## Local engine verification — 2026-10-27
+
+Nine shared projects exercise all 15 modules, alignment modes, delayed availability, missing and degenerate data, error propagation, and NumPy block boundaries. Their outputs agree within relative/absolute tolerance 1e-9, with exact nonnumeric fields; human-readable error wording may differ. Independent known-answer tests verify sample deviation and a line with slope 2 and intercept 3. Cache tests prove unchanged reuse, invalidation of a modified branch, source-data invalidation, and bounded eviction. Service tests cover job/result isolation, cancellation, concurrency limits, malformed/non-finite/oversized input, origin/host/protocol checks, and retention measured from completion.
+
+The Python test client currently reports a dependency deprecation warning about its httpx transport. It does not affect the application service or test results; migration to the replacement test transport remains a maintenance item.
+
+Production-preview browser acceptance covered Browser as the reload default, Python selection, full-cache rerun, and correlation-window invalidation (seven reused modules; Undo restored all nine). Stopping the service produced an explicit error and disabled result exports; selecting Browser recovered the same graph. A 40,000-input-row Python study was cancelled, and switching to Browser during a subsequent Python run left the Browser result authoritative. The exported results file recorded Python 0.1.0, NumPy 2.3.4, SciPy 1.16.3, protocol 1, and the contract hash. Both themes and the Engine menu were checked at normal and 480-pixel widths; temporary viewport overrides were reset. The browser warning/error log was empty in the final rebuilt session. These are manual checks, not an automated end-to-end suite.
+
+### Measured performance
+
+Windows, Intel Core i5-10400F, Node 22.14.0, Python 3.12.10, NumPy 2.3.4, SciPy 1.16.3; single-thread numerical libraries, warm runtimes, five runs per case, medians in milliseconds. Each project has two sources, alignment, rolling correlation, sample deviation, OLS, and four outputs. Rows are **per source**, so the largest case has 40,000 input rows.
+
+| Rows / window  | TypeScript core | Python engine | Python cached | Python HTTP fresh | Python HTTP cached |
+| -------------- | --------------: | ------------: | ------------: | ----------------: | -----------------: |
+| 1,000 / 100    |            45.9 |          53.8 |          15.1 |             199.1 |              187.4 |
+| 5,000 / 500    |           483.8 |         351.9 |          70.3 |             651.1 |              384.3 |
+| 20,000 / 1,000 |         3,579.9 |       2,590.4 |         273.0 |           3,363.7 |            1,062.1 |
+
+TypeScript is the browser's core executed under Node, excluding worker transfer and UI rendering. Python engine time includes validation, hashing, calculations, and preparation of bounded outputs but excludes HTTP serialization. HTTP includes complete request/result JSON and 120 ms polling, excluding UI rendering. These are different layers, deliberately reported separately. Python's calculation phase helps the larger cases; full transfer overhead erases the gain for small/medium cold runs. An unchanged cached large request is about 3.4 times faster than the uncached TypeScript core in this fixture, not a general language speed claim. No peak-memory benchmark or production throughput claim is implied.
+
+Reproduce with `npm run engine:start` and `npm run engine:benchmark`. Raw samples are retained in [engine-benchmark.json](engine-benchmark.json); the script writes fresh measurements under `.local/`.
 
 The 15 workbench tests cover:
 

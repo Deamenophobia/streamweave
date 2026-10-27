@@ -1,4 +1,10 @@
-import { dataRows, toCsv, type DataValue, type WorkbenchProject } from "@streamweave/core";
+import {
+  dataRows,
+  toCsv,
+  type DataValue,
+  type EngineMetadata,
+  type WorkbenchProject,
+} from "@streamweave/core";
 import type { ExportFile } from "./contracts";
 
 export type NamedValue = { label: string; data: DataValue };
@@ -11,6 +17,7 @@ export function resultsExport(
   project: WorkbenchProject,
   moduleId: string,
   results: NamedValue[],
+  engine?: EngineMetadata,
 ): ExportFile {
   return {
     name: `streamweave-${moduleId}.results.json`,
@@ -19,7 +26,8 @@ export function resultsExport(
       {
         format: "streamweave-results",
         version: 2,
-        engineVersion: "0.2.0",
+        engineVersion: engine?.version ?? "0.2.0",
+        ...(engine ? { engine } : {}),
         moduleId,
         results,
         project,

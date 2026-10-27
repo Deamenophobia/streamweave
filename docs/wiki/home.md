@@ -2,7 +2,7 @@
 
 Streamweave is a local numerical workbench for composing calculations across independent timestamped datasets. Import files, connect typed modules on a canvas, and inspect reproducible results. It is an early foundation for a lightweight visual calculator; it does not implement a MATLAB-compatible language.
 
-The current release is **v0.2**. Calculations run locally in a browser worker. No account, external data connection, or remote calculation service is required to use the workbench.
+The current release is **v0.2**. Calculations run locally in a browser worker by default, with an optional [local Python engine](local-engine.md). No account, external data connection, or remote calculation service is required to use the workbench.
 
 ![Canvas workspace](../workbench.png)
 

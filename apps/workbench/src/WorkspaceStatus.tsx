@@ -14,7 +14,10 @@ export function WorkspaceStatus({
     ([, result]) => result.state !== "ready",
   );
   function status() {
-    if (execution.busy) return "◌ Computing…";
+    if (execution.busy)
+      return execution.progress
+        ? `◌ Computing ${execution.progress.completed}/${execution.progress.total} modules…`
+        : "◌ Computing…";
     if (execution.error) return execution.error;
     if (failures.length)
       return `${failures.length} ${failures.length === 1 ? "module needs" : "modules need"} attention`;
@@ -28,7 +31,10 @@ export function WorkspaceStatus({
         {project.graph.nodes.length} modules · {project.graph.edges.length} connections
       </span>
       <span className="status-local">
-        {project.datasets.length} data sources · Local computation
+        {project.datasets.length} data sources ·{" "}
+        {execution.engineId === "python" ? "Python" : "Browser"}
+        {execution.metrics &&
+          ` · ${Math.round(execution.metrics.durationMs)} ms · ${execution.metrics.cacheHits} cached`}
       </span>
     </footer>
   );

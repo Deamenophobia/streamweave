@@ -21,6 +21,7 @@ for (const [name, target] of Object.entries({
   "studio.png": "assets/studio.png",
   "datasets.png": "assets/datasets.png",
   "results.png": "assets/results.png",
+  "local-engine.png": "assets/local-engine.png",
 }))
   files.set(resolve(root, "docs", name), target);
 

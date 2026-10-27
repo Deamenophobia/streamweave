@@ -82,6 +82,9 @@ export function App() {
         canRedo={history.canRedo}
         busy={execution.busy}
         run={execution.rerun}
+        cancel={execution.cancel}
+        engineId={execution.engineId}
+        setEngine={execution.setEngine}
       />
       <WorkspaceSidebar
         route={route}

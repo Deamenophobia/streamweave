@@ -16,4 +16,5 @@
 - Treat a user edit as one undo transaction, including its incident wires. Keep canvas measurements and selection outside the portable project.
 - Project JSON is the restorable workspace format. Table/report exports do not replace it. Preserve v2 files, validate values before JSON encoding, and test round-trips before changing persistence. Future format versions require explicit compatibility/migration decisions.
 - Run `npm run check` before committing. Inspect the browser after canvas or interaction changes.
-- Do not introduce credentials, external execution services, or telemetry into the workbench.
+- The optional Python engine belongs in `services/engine/`. Keep HTTP/job orchestration separate from numerical modules. Generate `protocol/modules.json` from the TypeScript registry; do not hand-edit it or duplicate its parameter/port definitions. Run `npm run engine:check` for engine or numerical contract changes.
+- Do not introduce credentials, remote execution services, or telemetry into the workbench. The explicitly selected loopback Python service is the supported local execution boundary.

@@ -19,7 +19,7 @@ TypeScript additionally enforces unused-local, unused-parameter, and implicit-re
 
 ## Verification
 
-The resulting suite contains **60 tests**: 20 legacy accumulator/replay/pipeline tests, 15 general workbench tests, seven editor/import tests, three project-opening race tests, three module-contract tests, two parameter-option tests, four file-format tests, three calculation-identity tests, and three appearance-preference tests. `npm run check` runs formatting, documentation-link validation, source boundary/cycle checks, type checking, tests, and production builds. Both terminal examples were exercised during the original review.
+The TypeScript suite contains **62 tests**: the preceding 60 tests plus two local-engine response/provenance tests. The optional Python suite contains **25 tests**, including nine cross-engine fixtures, analytical answers, graph/document rejection, cache invalidation and bounds, service isolation/cancellation/retention, and source dependency rules. `npm run check` runs formatting, documentation-link and shared-contract validation, source boundary/cycle checks, type checking, TypeScript tests, and production builds. `npm run engine:check` adds the Python checks. Both terminal examples were exercised during the original review.
 
 `npm audit` reported **zero known vulnerabilities** for the installed lockfile on 2026-10-24. This is time-sensitive and does not cover application logic or unknown vulnerabilities. React Flow still produces its known non-fatal `use client` bundler warning in this client application.
 
@@ -47,10 +47,12 @@ Classic and Studio share one component tree. The appearance feature owns its cat
 
 ## Remaining gaps
 
+The Python engine keeps HTTP, jobs, cache, graph validation/scheduling, and numerical modules separate. Generated metadata avoids two independently maintained port/parameter catalogues. Cancellation suppresses stale results, and service failure remains visible without silent fallback. Parity fixtures and an explicit engine/library provenance record support reproducibility. See [Local Python engine](wiki/local-engine.md) for limits and extension locations.
+
 - Browser acceptance is manual. There is no automated end-to-end browser suite or full cross-browser matrix.
 - Keyboard/focus behavior has been spot-checked, but there is no complete accessibility audit.
-- Input bounds are enforced; practical throughput and peak memory have not been benchmarked. History can retain up to 50 project snapshots, and rolling operations scan bounded windows.
-- Numerical tests use independent analytical fixtures, but there is no broad external-library differential test suite, property-based campaign, or formal proof.
+- Input bounds are enforced. Three synthetic throughput cases have been benchmarked on one machine; peak process memory and diverse real workloads have not. History can retain up to 50 project snapshots, and rolling operations scan bounded windows.
+- Numerical tests use independent analytical fixtures and nine TypeScript/Python differential fixtures. There is no broad property-based campaign, external certification, or formal proof.
 - Extension is through build-time registration. There is no runtime plugin marketplace, remote code loading, or external plugin compatibility promise. New control types still need an explicit shared renderer implementation.
 - Browser save is explicit and storage-dependent; there is no autosave recovery, collaboration, or hosted persistence.
 

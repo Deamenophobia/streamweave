@@ -24,6 +24,8 @@ Appearance is another focused feature: `features/appearance/` owns the catalogue
 
 ## Dependency direction
 
+The optional local engine has its own ownership map in [Local Python engine](local-engine.md). Numerical implementations live under `services/engine/streamweave_engine/`; the HTTP/job layer calls the executor, which calls registered evaluators. The UI depends only on the `ComputeEngine` interface and validated wire protocol. Module metadata is generated from the core registry into `protocol/modules.json`, not maintained independently in Python. Adding a calculation requires implementations and parity fixtures for both engines; changing a transport requires no numerical changes.
+
 The core imports only core code. The app uses its public `@streamweave/core` exports. Adapters can use the core and sibling adapters; they cannot depend on platform code, document orchestration, execution, or views. Platform code can use adapters. Documents can use platform/adapters. Execution owns its worker and request contract and cannot depend on views or document services.
 
 `npm run check:boundaries` enforces these source import directions and rejects source dependency cycles. It is a lightweight import scan, not a semantic analysis of all runtime behavior. React imports in adapters/platform are forbidden. Feature views may call platform services for explicit user actions, but formats never call views.
