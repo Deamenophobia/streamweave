@@ -2,10 +2,10 @@
 
 ## Run locally
 
-Install Node.js **22.12 or newer** and npm. Repository access is private; use your existing authorized GitLab SSH identity.
+Install Node.js **22.12 or newer** and npm. Python is optional; the browser engine works without it.
 
 ```sh
-git clone git@gitlab.com:Deamenophobia/streamweave.git
+git clone https://github.com/Deamenophobia/streamweave.git
 cd streamweave
 npm ci
 npm run dev

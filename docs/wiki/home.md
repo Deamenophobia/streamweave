@@ -32,4 +32,4 @@ The persistent sidebar switches between Canvas, Datasets, and Results. File, Edi
 
 **Classic · Retro** is the default light appearance. The original dark **Studio** appearance remains available from the top bar. See [Appearance](appearance.md) for switching, persistence, and implementation ownership.
 
-Documentation sources live alongside the code in the private [repository](https://gitlab.com/Deamenophobia/streamweave). The wiki is published from those sources; update the repository first so changes remain reviewable and versioned.
+Documentation sources live alongside the code in the public [repository](https://github.com/Deamenophobia/streamweave). Read them directly on GitHub; no wiki account is required. Maintainers also publish a GitLab wiki from these sources, so documentation changes belong in the repository first.

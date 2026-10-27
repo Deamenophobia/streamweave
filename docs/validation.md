@@ -6,6 +6,14 @@ Validation covers the local implementation and reproducibility. It makes no clai
 
 `npm run check` covers formatting, documentation-link and shared-contract validation, source boundary/cycle checks, TypeScript checks, **62 TypeScript tests**, and both production builds. `npm run engine:check` covers Ruff formatting/linting, static Python types, and **19 Python tests**. The examples were exercised in the original review: `npm run demo` executes all four outputs of the multi-source example; `npm run demo:pressure` executes the legacy replay example. Dependency audit reported zero known vulnerabilities during the quality review on 2026-10-24. Vite emits a non-fatal `use client` directive warning from React Flow in this client-only application.
 
+## Public preview preparation — 2026-10-28
+
+The README now introduces the project with fresh production-build screenshots of the bundled synthetic study: Classic canvas, correlation results, and the optional Studio appearance at 1280 × 720. Both themes rendered all nine modules and eight connections; Results showed 116/121 valid correlation samples. The public repository and engine-help links were inspected, the browser warning/error log was empty, and the temporary preview was stopped afterward.
+
+The publication review checked all 11 preceding commits (386 historical file blobs) and the prepared tracked content for common credential patterns and user-home paths, with no matches. Tracked file history contained no `.env` files, private inventory folder, or key archives. Example inputs are synthetic. This was a focused publication review, not an independent or comprehensive security audit. `npm audit` reported zero known vulnerabilities for the installed JavaScript lockfile on this date. Installed dependency license metadata was reviewed and summarized in [third-party notices](../THIRD_PARTY_NOTICES.md).
+
+The standard `npm run check` passed after the publication changes. No numerical behavior changed and no unit tests were added. GitHub Actions runs the existing workbench checks and Python checks against shared fixtures. README, release notes, security policy, contribution guide, changelog, and dependency-notice links now participate in `docs:check` alongside the wiki sources.
+
 ## Backend hardening — 2026-10-28
 
 Mypy checks all 21 engine source files. Python coverage is consolidated into 19 tests: nine shared projects, meaningful numerical/cache/service behaviors, and dependency directions. Six repeated document-rejection cases, a pre-execution cancellation mock, and the elementary sample-deviation subcase were removed. Invalid external inputs are checked through the actual HTTP boundary; cancellation is checked after a real rolling kernel has processed a chunk. Timestamp/availability/count parity is exact, with tolerance applied only to calculated numeric values.

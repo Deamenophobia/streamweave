@@ -21,9 +21,9 @@ TypeScript additionally enforces unused-local, unused-parameter, and implicit-re
 
 The TypeScript suite contains **62 tests**: the preceding 60 tests plus two local-engine response/provenance tests. The Python suite contains **19 focused tests**, covering nine shared projects, cache/resource behavior, an independent regression contract, adversarial rolling-window transitions and overflow, service reuse/isolation/cancellation/idle cleanup, and source dependencies. Redundant lower-level validation cases and a trivial pre-execution cancellation test were removed in favor of service-boundary and real-kernel workflow coverage. `npm run check` runs formatting, documentation-link and shared-contract validation, source boundary/cycle checks, type checking, TypeScript tests, and production builds. `npm run engine:check` adds Ruff, Mypy across all engine source files, and the Python tests. Both terminal examples were exercised during the original review.
 
-`npm audit` reported **zero known vulnerabilities** for the installed lockfile on 2026-10-24. This is time-sensitive and does not cover application logic or unknown vulnerabilities. React Flow still produces its known non-fatal `use client` bundler warning in this client application.
+`npm audit` reported **zero known vulnerabilities** for the installed JavaScript lockfile on 2026-10-28. This is time-sensitive and does not cover application logic or unknown vulnerabilities. React Flow still produces its known non-fatal `use client` bundler warning in this client application.
 
-See the [validation record](validation.md) for browser acceptance evidence and the project's [CI pipelines](https://gitlab.com/Deamenophobia/streamweave/-/pipelines) for checks tied to each pushed commit.
+See the [validation record](validation.md) for browser acceptance evidence and the project's [GitHub checks](https://github.com/Deamenophobia/streamweave/actions/workflows/checks.yml) for checks tied to each pushed commit.
 
 ## Modularity and maintainability follow-up
 

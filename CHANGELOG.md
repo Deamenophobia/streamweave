@@ -2,7 +2,14 @@
 
 Meaningful user and contributor changes are recorded here. The portable workspace format remains version 2.
 
-## Unreleased
+## 0.2.0 — First public preview
+
+### Publication
+
+- Release Streamweave under MIT, with public GitHub documentation, contribution guidance, and a private vulnerability-reporting route.
+- Introduce the canvas, output inspection, and both calculation engines in the README with current screenshots of synthetic examples.
+- Run the existing core/workbench and Python checks in GitHub Actions, alongside the retained GitLab pipeline.
+- Record supported scope, compatibility, and known limitations in the [release notes](docs/releases/v0.2.0.md).
 
 ### Changed
 

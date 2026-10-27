@@ -115,7 +115,7 @@ export function WorkspaceHeader({
           </p>
           <a
             className="engine-guide"
-            href="https://gitlab.com/Deamenophobia/streamweave/-/wikis/local-engine"
+            href="https://github.com/Deamenophobia/streamweave/blob/main/docs/wiki/local-engine.md"
             target="_blank"
             rel="noreferrer"
           >

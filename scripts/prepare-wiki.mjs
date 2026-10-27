@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const source = resolve(root, "docs/wiki");
 const output = resolve(root, ".local/wiki");
-const repository = "https://gitlab.com/Deamenophobia/streamweave/-/blob/main/";
+const repository = "https://github.com/Deamenophobia/streamweave/blob/main/";
 const checkOnly = process.argv.includes("--check");
 const files = new Map();
 for (const name of (await readdir(source)).filter((name) => name.endsWith(".md"))) {
@@ -40,6 +40,28 @@ function linkTarget(sourcePath, href) {
   return fragment ? `${url}#${fragment}` : url;
 }
 
+function rewriteLinks(path, markdown) {
+  return markdown.replace(
+    /(!?\[[^\]]*\])\(([^\s)]+)\)/g,
+    (_, label, href) => `${label}(${linkTarget(path, href)})`,
+  );
+}
+
+const repositoryDocs = [
+  "README.md",
+  "CONTRIBUTING.md",
+  "CHANGELOG.md",
+  "SECURITY.md",
+  "THIRD_PARTY_NOTICES.md",
+  ...(await readdir(resolve(root, "docs/releases")))
+    .filter((name) => name.endsWith(".md"))
+    .map((name) => `docs/releases/${name}`),
+];
+for (const name of repositoryDocs) {
+  const path = resolve(root, name);
+  rewriteLinks(path, await readFile(path, "utf8"));
+}
+
 let pages = 0;
 for (const [path, target] of files) {
   if (!path.endsWith(".md")) {
@@ -50,10 +72,7 @@ for (const [path, target] of files) {
     continue;
   }
   const markdown = await readFile(path, "utf8");
-  const rendered = markdown.replace(
-    /(!?\[[^\]]*\])\(([^\s)]+)\)/g,
-    (_, label, href) => `${label}(${linkTarget(path, href)})`,
-  );
+  const rendered = rewriteLinks(path, markdown);
   pages++;
   if (!checkOnly) {
     await mkdir(output, { recursive: true });
@@ -61,5 +80,5 @@ for (const [path, target] of files) {
   }
 }
 console.log(
-  `${checkOnly ? "Validated" : "Prepared"} ${pages} wiki pages${checkOnly ? "" : ` in ${output}`}.`,
+  `${checkOnly ? "Validated" : "Prepared"} ${pages} wiki pages${checkOnly ? "" : ` in ${output}`}; checked ${repositoryDocs.length} repository documents.`,
 );

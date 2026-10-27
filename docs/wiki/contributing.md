@@ -41,11 +41,17 @@ Keep project mutations immutable. A connected insertion or deletion with its inc
 
 Engine changes cancel the previous run; Python checks cooperative cancellation between nodes and numerical chunks. File operations must not replace a newer document when an earlier read finishes late. The project-opening coordinator has explicit race tests; keep those invariants when changing file handling.
 
+## Public contributions
+
+Use GitHub [Issues](https://github.com/Deamenophobia/streamweave/issues) and pull requests for public contributions. Include a small synthetic reproduction for a bug and explain the resulting behavior of a change. See [SECURITY.md](../../SECURITY.md) for private vulnerability reports. The project is MIT licensed; workspace package `private` flags only prevent accidental npm publication.
+
+GitHub Actions and GitLab CI run the existing core/workbench checks and Python checks. Tests should protect meaningful behavior and regression risks, not repeat elementary arithmetic or the same validation assertion at every layer.
+
 ## Documentation and wiki publishing
 
 Canonical sources are `docs/wiki/*.md`, `docs/architecture.md`, `docs/analytics.md`, `docs/validation.md`, and `docs/code-quality.md`. Screenshots are in `docs/`. Do not maintain a separately edited wiki copy: direct wiki edits can be overwritten by the next publish.
 
-The publish preparation script checks local links, maps source links to GitLab, and copies only owned documentation files and images. It does not delete unrelated wiki pages or push changes.
+Public readers use the versioned documentation directly on GitHub. Maintainers with access to the separate GitLab copy can also publish its wiki using the optional steps below; contributors do not need that access. The preparation script checks local links, maps source links to the public GitHub repository, and copies only owned documentation files and images. It does not delete unrelated wiki pages or push changes.
 
 ```sh
 # Clone once; .local is ignored by the application repository.

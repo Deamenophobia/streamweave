@@ -225,7 +225,7 @@ export function WorkspaceSidebar(props: Props) {
       {route.page === "results" && <ResultList {...props} />}
       <a
         className="sidebar-repository"
-        href="https://gitlab.com/Deamenophobia/streamweave"
+        href="https://github.com/Deamenophobia/streamweave"
         target="_blank"
         rel="noreferrer"
       >

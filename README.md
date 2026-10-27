@@ -1,48 +1,86 @@
 # Streamweave
 
-A visual numerical workbench for multiple datasets, composable calculations, and reproducible outputs.
+A local-first visual numerical workbench. Combine timestamped datasets, connect reusable calculations, and explore reproducible results with browser or optional Python execution.
 
-Read the [GitLab wiki](https://gitlab.com/Deamenophobia/streamweave/-/wikis/home) or its [versioned documentation source](docs/wiki/home.md) for tutorials, module reference, architecture, and the [code-quality review](docs/code-quality.md).
+[Documentation](docs/wiki/home.md) · [First study](docs/wiki/getting-started.md) · [Module reference](docs/wiki/module-reference.md) · [Contributing](CONTRIBUTING.md) · [Release notes](docs/releases/v0.2.0.md)
 
-See [Contributing](CONTRIBUTING.md) for development guidance and the [Changelog](CHANGELOG.md) for meaningful changes.
+**v0.2.0 public preview · MIT licensed.** Designed for exploring sensor readings, operational measurements, and other timestamped data. The workbench runs locally and needs no account or external data feed.
 
-Import independent sources, align their timestamps, and connect calculations on a canvas. Branch a dataset into several analyses, duplicate a module with different parameters, and inspect each intermediate result. Charts, tables, and exports remain separate outputs.
+![Classic canvas with two sensor sources, timestamp alignment, independent correlation and regression branches, and four outputs](docs/workbench.png)
 
-![Streamweave numerical workbench](docs/workbench.png)
+_Compose the calculation itself: one source can feed several branches, and every module can be configured independently. Screenshot uses the bundled synthetic sensor study._
 
-**Classic · Retro** is the default appearance. Select **Studio · Original** in the top-bar **Appearance** control to use the original dark interface. The choice is remembered in your browser. See [Appearance](docs/wiki/appearance.md).
+- **Combine sources:** import CSV, JSON, or JSONL, select columns and units, then align timestamps explicitly.
+- **Compose analyses:** reuse 15 built-in modules for transformations, rolling statistics, correlation, linear fits, and outputs.
+- **Inspect every step:** view intermediate values, quality states, charts, tables, and regression residuals.
+- **Keep your work:** download a project containing the graph, parameters, and datasets; export CSV or results JSON with engine provenance.
 
-## Run locally
+## Quick start
 
 Requires Node.js 22.12 or newer and npm.
 
 ```sh
+git clone https://github.com/Deamenophobia/streamweave.git
+cd streamweave
 npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:5187**. The initial study connects two synthetic sensor datasets sampled at different intervals. An alignment module feeds rolling correlation, descriptive linear regression, and an export. Regression has separate coefficient and residual ports.
+Open **http://127.0.0.1:5187**. The bundled two-source study opens unless you previously saved a project. Python is not required for this workflow. Stop the development server with **Ctrl+C**.
 
-```sh
-npm run check          # formatting, docs, boundaries, types, behavioral/numerical tests, builds
-npm run demo           # execute the multi-source study without the browser
-npm run demo:pressure  # retained signed-event replay example
-```
+### Try a first study
 
-An optional **local Python engine** implements the same 15 modules with NumPy and SciPy. Install Python 3.12, then run:
+1. Choose **Examples → Two-source study**. Its synthetic sensors have different sampling intervals and a gap.
+2. Open **Datasets** to inspect rows, columns, units, and missing values.
+3. In **Canvas**, select **Rolling correlation** and change its window from 20 to eight observations. Calculations update automatically; moving a module changes only layout.
+4. Open **Results** to inspect the correlation chart, fit coefficients, or residual diagnostics. Use **Edit → Undo** to restore the original window.
+5. Choose **File → Download project** to retain the complete study. **Open project** restores it later. Examples replace the current in-memory document, so download work before switching.
+
+![Results view showing rolling correlation, explicit valid sample counts, a time cursor, and CSV and JSON export controls](docs/results.png)
+
+_Inspect one output at a time. Charts preserve gaps; tables retain values, timestamps, units, and quality states._
+
+See the [step-by-step guide](docs/wiki/getting-started.md) to build the same workflow from your own files.
+
+## Two engines, one workspace
+
+|                  | Browser — default                                               | Python — optional                                                        |
+| ---------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Execution        | TypeScript core compiled to JavaScript, running in a Web Worker | Local Python 3.12 service using NumPy and SciPy                          |
+| Start here for   | Quick exploration and small studies                             | Larger or repeated studies, and numerical-library extensions             |
+| Additional setup | None after the quick start                                      | Install Python and start the local service                               |
+| Repeated runs    | Runs the current graph in its worker                            | Reuses validated datasets and cached branches; transfers changed results |
+| Compatibility    | Same 15 modules and v2 project format                           | Same 15 modules and v2 project format                                    |
+
+Both engines calculate locally using binary64 arithmetic. Python is not automatically faster or more accurate. Small fresh studies often favor Browser; the [benchmark record](docs/validation.md#current-performance) separates computation, HTTP transfer, and cache reuse, with machine details and limits.
+
+To enable Python, install **Python 3.12**, keep the workbench running, and open a **second terminal** in the repository root:
 
 ```sh
 npm run engine:setup   # creates an isolated environment with pinned dependencies
 npm run engine:start   # local service at 127.0.0.1:5191
 ```
 
-Choose **Engine → Python · local service** in the workbench. Browser remains the default and works without Python. Both engines use the same portable project format; results record their producing engine. See [Local Python engine](docs/wiki/local-engine.md) for architecture, cancellation, caching, limits, and measured performance. Python is not faster for every study; transport overhead matters.
+Choose **Engine → Python · local service**. The status bar shows the producing engine, total request time, and cache hits. Reload starts with Browser; switching engines preserves the document. A stopped or incompatible Python service shows an explicit error, and you can select Browser to continue. Stop the service with **Ctrl+C**.
+
+Update the workbench and service together: this release uses **HTTP protocol 2**, while portable project JSON remains **version 2**. See the [engine guide](docs/wiki/local-engine.md) for setup troubleshooting, cancellation, cache limits, and extension locations.
 
 ## Navigate the workspace
 
-The persistent sidebar switches between three focused views. **Canvas** contains the graph and module library; **Datasets** inspects source rows, columns, units, and missing cells; **Results** displays one selected output or intermediate module at a time. The top **File / Edit / Examples / Engine** menus remain available in every view. Navigation preserves the graph, selection, and canvas viewport; browser Back and Forward work between views.
+The sidebar switches between **Canvas**, **Datasets**, and **Results**. The top **File / Edit / Examples / Engine** menus remain available in every view. Navigation preserves the graph and canvas viewport; browser Back and Forward work between views.
 
-The canvas library supports search and drag-and-drop. Clicking a module shows its description; **Place module** explicitly starts placement. Its **Sources** tab provides the same placement controls for imported datasets. Charts and source previews occupy their own views instead of being stacked below the graph.
+Drag modules from the library, right-click empty canvas space, or press **Shift+A** to add one at a chosen position. Connect compatible ports, duplicate modules to compare parameters, and drag a wire into empty space to continue a branch. Clicking a library item shows details before placement. See the [canvas guide](docs/wiki/canvas-guide.md).
+
+**Classic · Retro** is the default light appearance. Choose **Studio · Original** from the top-bar Appearance selector for the dark interface. Both share the same functionality; the preference is remembered separately from project data.
+
+<details>
+<summary>See the Studio appearance</summary>
+
+![The same two-source canvas in the optional dark Studio appearance](docs/studio.png)
+
+Read about [appearance settings](docs/wiki/appearance.md).
+
+</details>
 
 ## Compose a workflow
 
@@ -107,4 +145,16 @@ Correlation and regression describe the supplied sample. They do not establish c
 
 See [the numerical contract](docs/analytics.md), [architecture and reuse decisions](docs/architecture.md), and [validation record](docs/validation.md).
 
-The repository and packages are private. No open-source license is granted. Third-party dependencies retain their own licenses.
+## Development and support
+
+```sh
+npm run check          # formatting, docs, boundaries, types, tests, builds
+npm run engine:check   # Python checks; requires engine:setup first
+npm run demo           # execute the multi-source study without the browser
+```
+
+Start with [Contributing](CONTRIBUTING.md), the [extension ownership map](docs/wiki/extension-guide.md), and the [Changelog](CHANGELOG.md). GitHub is the public home for [issues](https://github.com/Deamenophobia/streamweave/issues), contributions, and [releases](https://github.com/Deamenophobia/streamweave/releases). Maintainers retain a GitLab copy; no GitLab access is needed to use or contribute to the public project. Report vulnerabilities through the [security policy](SECURITY.md).
+
+## License
+
+Streamweave is available under the [MIT license](LICENSE). Third-party dependencies retain their own licenses; see [dependency notices](THIRD_PARTY_NOTICES.md). Workspace packages remain marked `private` to prevent accidental npm publication; this does not restrict use under MIT.
